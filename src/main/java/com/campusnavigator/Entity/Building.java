@@ -1,6 +1,7 @@
 package com.campusnavigator.Entity;
 
-import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
 import java.util.Set;
 
 @Entity
@@ -18,9 +19,11 @@ public class Building {
     private Double locationLongitude;
 
     @OneToMany(mappedBy = "building", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private Set<PointOfInterest> pointsOfInterest;
 
     @OneToOne(mappedBy = "building", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private MapData mapData;
 
     public Long getBuildingID() {

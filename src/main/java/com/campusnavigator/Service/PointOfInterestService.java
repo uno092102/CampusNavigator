@@ -16,6 +16,10 @@ public class PointOfInterestService {
     }
 
     public PointOfInterest createPointOfInterest(PointOfInterest poi) {
+
+        if (poi.getBuilding() == null) {
+            throw new RuntimeException("Point of Interest must be associated with a Building.");
+        }
         return poiRepository.save(poi);
     }
 
@@ -28,11 +32,14 @@ public class PointOfInterestService {
     }
 
     public PointOfInterest updatePointOfInterest(Long id, PointOfInterest poiDetails) {
-        PointOfInterest poi = poiRepository.findById(id).orElseThrow();
+        PointOfInterest poi = poiRepository.findById(id).orElseThrow(
+                () -> new RuntimeException("Point of Interest not found with id " + id));
+
         poi.setName(poiDetails.getName());
         poi.setDescription(poiDetails.getDescription());
         poi.setType(poiDetails.getType());
         poi.setBuilding(poiDetails.getBuilding());
+
         return poiRepository.save(poi);
     }
 

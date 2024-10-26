@@ -1,6 +1,8 @@
 package com.campusnavigator.Entity;
 
-import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import jakarta.persistence.*;
 
 @Entity
 public class PointOfInterest {
@@ -10,6 +12,7 @@ public class PointOfInterest {
 
     @ManyToOne
     @JoinColumn(name = "building_id", nullable = false)
+    @JsonBackReference
     private Building building;
 
     private String name;
