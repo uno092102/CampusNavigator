@@ -51,14 +51,14 @@ public class SearchController {
     
     //UPDATE
     @PutMapping("/putSearchHistory")
-    public SearchEntity putSearchHistory(@RequestParam int queryID, @RequestBody SearchEntity newSearchHistory) {
-        //TODO: process PUT request
+    public SearchEntity putSearchHistory(@RequestParam int queryID, @RequestBody SearchEntity newSearchHistory) 
+    {
         
         return sserv.putSearchHistory(queryID, newSearchHistory);
     }
 
     //DELETE
-    @DeleteMapping("/deleteSearchHistory/{id}")
+    @DeleteMapping("/deleteSearchHistory/{queryID}")
     public String deleteSearchHistory(@PathVariable int queryID)
     {
         return sserv.deleteSearchHistory(queryID);
