@@ -1,5 +1,7 @@
 package com.campusnavigator.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -10,6 +12,7 @@ public class MapData {
 
     @OneToOne
     @JoinColumn(name = "building_id", nullable = false)
+    @JsonBackReference
     private Building building;
 
     private String mapImageURL;
