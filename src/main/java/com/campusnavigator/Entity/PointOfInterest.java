@@ -1,6 +1,6 @@
 package com.campusnavigator.Entity;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 public class PointOfInterest {
