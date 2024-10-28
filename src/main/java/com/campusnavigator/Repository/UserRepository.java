@@ -8,9 +8,6 @@ import com.campusnavigator.Entity.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer>{
 
-    public User findByUserId(int userID);
-
-    
-
+    public User findByUserID(int userID);
     
 }

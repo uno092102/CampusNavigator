@@ -13,7 +13,7 @@ public class User {
     private int userID;
 
     private String name;
-    private Enum role;
+    private String role;
     private String email;
     private String password;
     
@@ -21,7 +21,7 @@ public class User {
         super();
 }
 
-public User(int userID, String name, Enum role, String email, String password){
+public User(int userID, String name, String role, String email, String password){
 
     this.userID = userID;
     this.name = name;
@@ -48,10 +48,10 @@ public User(int userID, String name, Enum role, String email, String password){
    public String getPassword() {
        return password;
    }
-   public void setRole(Enum role) {
+   public void setRole(String role) {
        this.role = role;
    }
-   public Enum getRole() {
+   public String getRole() {
        return role;
    }
    public void setUserID(int userID) {
