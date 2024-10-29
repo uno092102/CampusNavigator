@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.campusnavigator.Entity.User;
 import com.campusnavigator.Service.UserService;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
 @RequestMapping(method = RequestMethod.GET,path="/api/user")
+@CrossOrigin
 public class UserController {
 
     @Autowired
@@ -33,7 +35,7 @@ public class UserController {
     }
     
     //create
-    @PostMapping("/postSearchEntity")
+    @PostMapping("/postUserEntity")
     public User postUserRecord(@RequestBody User search)
     {
         return userv.postUserRecord(search);

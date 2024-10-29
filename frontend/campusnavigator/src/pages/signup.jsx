@@ -22,6 +22,9 @@ const backgroundImages = [
 const Signup = () => {
   const navigate = useNavigate();
   const [currentImage, setCurrentImage] = useState(backgroundImages[0]);
+  const [name, setName]=useState('')
+  const [email, setEmail]=useState('')
+  const [password, setPassword]=useState('')
 
   useEffect(() => {
     document.title = "Sign Up - CampusNavigator";
@@ -33,12 +36,30 @@ const Signup = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/login');
+    const user = {name, email, password}
+    console.log(user)
+   
+    try {
+      const response = await fetch("http://localhost:8080/api/user/postUserEntity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(user),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      console.log("New User Added!");
+      navigate('/login');
+    } catch (error) {
+      console.error("Failed to fetch:", error);
+    }
   };
 
-  const handleLogin = () => {
+  const handleLogin = (e) => {
     navigate('/login');
   };
 
@@ -51,10 +72,28 @@ const Signup = () => {
         <img src="/logoimg/Logolight.svg" alt="Logo" className="logo" />
         <form className="signup-form" onSubmit={handleSubmit}>
           <h2>Sign Up</h2>
-          <input type="text" placeholder="Full Name" required />
-          <input type="email" placeholder="Email" required />
-          <input type="password" placeholder="Password" required />
-          <button type="submit">Register</button>
+          <input 
+    type="text" 
+    placeholder="Full Name" 
+    value={name} 
+    onChange={(e) => setName(e.target.value)} 
+    required 
+  />
+  <input 
+    type="email" 
+    placeholder="Email" 
+    value={email} 
+    onChange={(e) => setEmail(e.target.value)} 
+    required 
+  />
+  <input 
+    type="password" 
+    placeholder="Password" 
+    value={password} 
+    onChange={(e) => setPassword(e.target.value)} 
+    required 
+  />
+  <button type="submit" onClick={handleSubmit}>Register</button>
         </form>
         <p>
           Already have an account? <button className="link-button" onClick={handleLogin}>Login</button>
