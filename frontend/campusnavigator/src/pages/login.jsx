@@ -1,132 +1,66 @@
-import React, { useState } from 'react';
+// src/pages/login.jsx
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import './signup.css';
+
+const backgroundImages = [
+  "/backgroundimg/Accreditation-Room.jpg",
+  "/backgroundimg/Case-Room.jpg",
+  "/backgroundimg/Covered-Court.jpg",
+  "/backgroundimg/Fine-Dining.jpg",
+  "/backgroundimg/GLE-Building.jpg",
+  "/backgroundimg/Kitchen-01.jpg",
+  "/backgroundimg/Learning-Resource-and-Activity-Center-01.jpg",
+  "/backgroundimg/Learning-Resource-and-Activity-Center-02.jpg",
+  "/backgroundimg/Learning-Resource-and-Activity-Center-03.jpg",
+  "/backgroundimg/Matisse-Room.jpg",
+  "/backgroundimg/SAL-Building.jpg",
+  "/backgroundimg/Smart-Classroom.jpg",
+  "/backgroundimg/Wildcat-Innovation-Labs-01.jpg"
+];
 
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [signUpButtonClicked, setSignUpButtonClicked] = useState(false);
   const navigate = useNavigate();
+  const [currentImage, setCurrentImage] = useState(backgroundImages[0]);
 
-  const handleLogin = (e) => {
+  useEffect(() => {
+    document.title = "Login - CampusNavigator";
+    const switchBackground = () => {
+      const randomIndex = Math.floor(Math.random() * backgroundImages.length);
+      setCurrentImage(backgroundImages[randomIndex]);
+    };
+    const interval = setInterval(switchBackground, Math.random() * 5000 + 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (!username || !password) {
-      setError('Please enter both username and password.');
-    } else {
-      setError('');
-      // Add authentication logic here
-      console.log('Logging in:', { username, password });
-    }
+    navigate('/');
   };
 
-  const handleSignUpClick = () => {
-    setSignUpButtonClicked(true);
-    setTimeout(() => {
-      navigate('/signup');
-    }, 300); // Simulate a brief delay before navigation
+  const handleSignup = () => {
+    navigate('/signup');
   };
 
   return (
-    <div style={styles.container}>
-      <form onSubmit={handleLogin} style={styles.form}>
-        <h2 style={styles.title}>Login</h2>
-
-        {error && <p style={styles.error}>{error}</p>}
-
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          style={styles.input}
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={styles.input}
-        />
-
-        <button type="submit" style={styles.filledButton}>
-          Login
-        </button>
-
-        {/* Sign Up button to navigate to the Signup page */}
-        <button
-          type="button"
-          onClick={handleSignUpClick}
-          style={{
-            ...styles.signUpButton,
-            backgroundColor: signUpButtonClicked ? '#6A0DAD' : 'light',
-            color: signUpButtonClicked ? '#ffffff' : '#6A0DAD',
-          }}
-        >
-          Sign Up
-        </button>
-      </form>
+    <div className="signup-container">
+      <div className="signup-left">
+        <img src={currentImage} alt="Background" className="background-image" />
+      </div>
+      <div className="signup-right">
+        <img src="/logoimg/Logolight.svg" alt="Logo" className="logo" />
+        <form className="signup-form" onSubmit={handleSubmit}>
+          <h2>Login</h2>
+          <input type="email" placeholder="Email" required />
+          <input type="password" placeholder="Password" required />
+          <button type="submit">Login</button>
+        </form>
+        <p>
+          Don't have an account? <button className="link-button" onClick={handleSignup}>Sign Up</button>
+        </p>
+      </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100vh',
-    backgroundColor: '#1e1e1e', // Dark background for dark mode
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '20px',
-    maxWidth: '300px',
-    width: '100%',
-    backgroundColor: '#2c2c2c', // Darker gray background for the form
-    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.5)',
-    borderRadius: '8px',
-  },
-  title: {
-    textAlign: 'center',
-    color: '#ffffff', // White text for dark mode
-    marginBottom: '20px',
-  },
-  input: {
-    padding: '10px',
-    marginBottom: '15px',
-    border: '1px solid #444', // Subtle border for dark mode
-    borderRadius: '4px',
-    fontSize: '16px',
-    backgroundColor: '#333333', // Dark input background
-    color: '#ffffff', // White text for inputs
-  },
-  filledButton: {
-    padding: '10px',
-    backgroundColor: '#6A0DAD', // Purple fill for the login button
-    color: '#ffffff', // White text color for contrast
-    border: 'none', // No border for a filled look
-    borderRadius: '4px',
-    fontSize: '16px',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    marginBottom: '10px',
-  },
-  signUpButton: {
-    padding: '10px',
-    border: '2px solid #6A0DAD', // Purple border for a vector look
-    borderRadius: '4px',
-    fontSize: '16px',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-  },
-  error: {
-    color: '#ff4d4f', // Red error text for contrast
-    marginBottom: '10px',
-    textAlign: 'center',
-  },
 };
 
 export default Login;

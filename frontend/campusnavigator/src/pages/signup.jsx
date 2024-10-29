@@ -1,140 +1,67 @@
-import React, { useState } from 'react';
+// src/pages/signup.jsx
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import './signup.css';
+
+const backgroundImages = [
+  "/backgroundimg/Accreditation-Room.jpg",
+  "/backgroundimg/Case-Room.jpg",
+  "/backgroundimg/Covered-Court.jpg",
+  "/backgroundimg/Fine-Dining.jpg",
+  "/backgroundimg/GLE-Building.jpg",
+  "/backgroundimg/Kitchen-01.jpg",
+  "/backgroundimg/Learning-Resource-and-Activity-Center-01.jpg",
+  "/backgroundimg/Learning-Resource-and-Activity-Center-02.jpg",
+  "/backgroundimg/Learning-Resource-and-Activity-Center-03.jpg",
+  "/backgroundimg/Matisse-Room.jpg",
+  "/backgroundimg/SAL-Building.jpg",
+  "/backgroundimg/Smart-Classroom.jpg",
+  "/backgroundimg/Wildcat-Innovation-Labs-01.jpg"
+];
 
 const Signup = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [currentImage, setCurrentImage] = useState(backgroundImages[0]);
 
-  const handleSignup = (e) => {
+  useEffect(() => {
+    document.title = "Sign Up - CampusNavigator";
+    const switchBackground = () => {
+      const randomIndex = Math.floor(Math.random() * backgroundImages.length);
+      setCurrentImage(backgroundImages[randomIndex]);
+    };
+    const interval = setInterval(switchBackground, Math.random() * 5000 + 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSubmit = (e) => {
     e.preventDefault();
+    navigate('/login');
+  };
 
-    if (!username || !email || !password) {
-      setError('Please fill in all fields.');
-    } else {
-      setError('');
-      console.log('Signing up:', { username, email, password });
-      // Optionally navigate to the login page after signing up
-    }
+  const handleLogin = () => {
+    navigate('/login');
   };
 
   return (
-    <div style={styles.container}>
-      <form onSubmit={handleSignup} style={styles.form}>
-        <h2 style={styles.title}>Sign Up</h2>
-
-        {error && <p style={styles.error}>{error}</p>}
-
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          style={styles.input}
-        />
-
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={styles.input}
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={styles.input}
-        />
-
-        <button type="submit" style={styles.filledButton}>
-          Sign Up
-        </button>
-
-        {/* Login button to navigate back to the Login page */}
-        <button
-          type="button"
-          onClick={() => navigate('/login')}
-          style={styles.loginButton}
-        >
-          Login
-        </button>
-      </form>
+    <div className="signup-container">
+      <div className="signup-left">
+        <img src={currentImage} alt="Background" className="background-image" />
+      </div>
+      <div className="signup-right">
+        <img src="/logoimg/Logolight.svg" alt="Logo" className="logo" />
+        <form className="signup-form" onSubmit={handleSubmit}>
+          <h2>Sign Up</h2>
+          <input type="text" placeholder="Full Name" required />
+          <input type="email" placeholder="Email" required />
+          <input type="password" placeholder="Password" required />
+          <button type="submit">Register</button>
+        </form>
+        <p>
+          Already have an account? <button className="link-button" onClick={handleLogin}>Login</button>
+        </p>
+      </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100vh',
-    backgroundColor: '#1e1e1e',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '20px',
-    maxWidth: '300px',
-    width: '100%',
-    backgroundColor: '#2c2c2c',
-    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.5)',
-    borderRadius: '8px',
-  },
-  title: {
-    textAlign: 'center',
-    color: '#ffffff',
-    marginBottom: '20px',
-  },
-  input: {
-    padding: '10px',
-    marginBottom: '15px',
-    border: '1px solid #444',
-    borderRadius: '4px',
-    fontSize: '16px',
-    backgroundColor: '#333333',
-    color: '#ffffff',
-  },
-  filledButton: {
-    padding: '10px',
-    backgroundColor: '#6A0DAD', // Purple fill for the login button
-    color: '#ffffff', // White text color for contrast
-    border: 'none', // No border for a filled look
-    borderRadius: '4px',
-    fontSize: '16px',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    marginBottom: '10px',
-  },
-  loginButton: {
-    padding: '10px',
-    backgroundColor: 'transparent',
-    color: '#6A0DAD',
-    border: '2px solid #6A0DAD',
-    borderRadius: '4px',
-    fontSize: '16px',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-  },
-  error: {
-    color: '#ff4d4f',
-    marginBottom: '10px',
-    textAlign: 'center',
-  },
-};
-
-styles.filledButton[':hover'] = {
-  backgroundColor: '#5b0d9c',
-};
-
-styles.loginButton[':hover'] = {
-  backgroundColor: '#6A0DAD',
-  color: '#ffffff',
 };
 
 export default Signup;
