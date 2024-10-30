@@ -47,6 +47,7 @@ const Login = () => {
       const user = users.find(user => user.email === email && user.password === password);
 
       if (user) {
+        localStorage.setItem('user', JSON.stringify(user));
         navigate('/homepage');
       } else {
         setErrorMessage("Invalid email or password. Please try again.");
@@ -70,7 +71,6 @@ const Login = () => {
         <img src="/logoimg/Logolight.svg" alt="Logo" className="logo" />
         <form className="signup-form" onSubmit={handleSubmit}>
           <h2>Login</h2>
-         
           <input 
             type="email" 
             placeholder="Email" 
@@ -85,7 +85,7 @@ const Login = () => {
             onChange={(e) => setPassword(e.target.value)} 
             required 
           />
-           {errorMessage && <p className="error-message">{errorMessage}</p>}
+          {errorMessage && <p className="error-message">{errorMessage}</p>}
           <button type="submit">Login</button>
         </form>
         <p>

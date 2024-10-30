@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -17,7 +17,8 @@ L.Icon.Default.mergeOptions({
 });
 
 const HomePage = () => {
-  const username = "MasuRii";
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [buildings, setBuildings] = useState([]);
   const [maps, setMaps] = useState([]);
@@ -35,17 +36,24 @@ const HomePage = () => {
   ];
 
   useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (!userData) {
+      navigate('/login');
+    } else {
+      setUser(userData);
+    }
+  }, [navigate]);
+
+  useEffect(() => {
     fetch('http://localhost:8080/api/buildings')
       .then(response => response.json())
       .then(data => {
-        console.log('Buildings fetched:', data);
         setBuildings(data);
       })
       .catch(error => console.error('Error fetching buildings:', error));
     fetch('http://localhost:8080/api/maps')
       .then(response => response.json())
       .then(data => {
-        console.log('Maps fetched:', data);
         setMaps(data);
       })
       .catch(error => console.error('Error fetching maps:', error));
@@ -55,19 +63,16 @@ const HomePage = () => {
     const building = buildings.find(b => b.buildingID === buildingID);
     if (!building || !building.mapData) return null;
     const map = maps.find(m => m.mapID === building.mapData.mapID);
-    console.log(`Map for Building ID ${buildingID}:`, map);
     return map ? map.mapImageURL : null;
   };
 
   const handleMarkerClick = (building) => {
     const imageURL = getMapImage(building.buildingID);
     const buildingPOIs = building.pointsOfInterest;
-    console.log('Marker clicked:', building, 'Image URL:', imageURL, 'POIs:', buildingPOIs);
     setSelectedBuilding({ ...building, imageURL, pois: buildingPOIs });
   };
 
   const handleCloseCard = () => {
-    console.log('Closing card for:', selectedBuilding);
     setSelectedBuilding(null);
   };
 
@@ -83,7 +88,6 @@ const HomePage = () => {
         (p.description && p.description.toLowerCase().includes(text))
       ))
     );
-    console.log('Search Results:', matchedBuildings);
     setSearchResults(matchedBuildings);
     setSelectedBuilding(null);
     postSearchRecord(text);
@@ -99,8 +103,6 @@ const HomePage = () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     })
-    .then(response => response.json())
-    .then(data => console.log('Search record posted:', data))
     .catch(error => console.error('Error posting search record:', error));
   };
 
@@ -115,9 +117,18 @@ const HomePage = () => {
     return () => { document.removeEventListener('mousedown', handleClickOutside); };
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
+  const handleEnableDevelopersMode = () => {
+    // Implementation for enabling developer's mode can be added here
+  };
+
   return (
     <div style={{ position: 'relative', height: '100vh', width: '100%' }}>
-      <header style={{ backgroundColor: '#7757FF', color: '#FFFFFF', padding: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', zIndex: 1000 }}>
+      <header style={{ position: 'relative', backgroundColor: '#7757FF', color: '#FFFFFF', padding: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', zIndex: 1000 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <img src="/logoimg/Logodark.svg" alt="Logo" style={{ width: '60%', marginRight: '20px' }} />
@@ -166,11 +177,10 @@ const HomePage = () => {
               alt="User Profile" 
               style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px', cursor: 'pointer' }} 
               onClick={() => {
-                console.log('User profile clicked');
                 setDropdownOpen(!dropdownOpen);
               }} 
             />
-            <span style={{ marginRight: '10px' }}>{username}</span>
+            <span style={{ marginRight: '10px' }}>{user ? user.name : ''}</span>
             {dropdownOpen && (
               <div style={{ 
                 position: 'absolute', 
@@ -180,11 +190,15 @@ const HomePage = () => {
                 color: '#7757FF', 
                 borderRadius: '8px', 
                 boxShadow: '0 4px 8px rgba(0,0,0,0.2)', 
-                overflow: 'hidden' 
+                overflow: 'hidden',
+                zIndex: 1001
               }}>
-                <Link to="/profile" style={{ display: 'block', padding: '10px 20px', textDecoration: 'none', color: '#7757FF' }}>My Profile</Link>
-                <Link to="/settings" style={{ display: 'block', padding: '10px 20px', textDecoration: 'none', color: '#7757FF' }}>Settings</Link>
-                <Link to="/logout" style={{ display: 'block', padding: '10px 20px', textDecoration: 'none', color: '#7757FF' }}>Logout</Link>
+                <div onClick={handleEnableDevelopersMode} style={{ padding: '10px 20px', cursor: 'pointer' }}>
+                  Enable developers mode
+                </div>
+                <div onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer' }}>
+                  Logout
+                </div>
               </div>
             )}
           </div>
