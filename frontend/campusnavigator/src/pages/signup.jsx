@@ -21,9 +21,9 @@ const backgroundImages = [
 const Signup = () => {
   const navigate = useNavigate();
   const [currentImage, setCurrentImage] = useState(backgroundImages[0]);
-  const [name, setName]=useState('')
-  const [email, setEmail]=useState('')
-  const [password, setPassword]=useState('')
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     document.title = "Sign Up - CampusNavigator";
@@ -37,21 +37,38 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const user = {name, email, password}
-    console.log(user)
-   
+    const user = { name, email, password };
+
     try {
       const response = await fetch("http://localhost:8080/api/user/postUserEntity", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(user),
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
-      console.log("New User Added!");
+
+      const createdUser = await response.json();
+
+      const geolocationData = {
+        latitude: 10.294337,
+        longitude: -236.118532,
+        timeStamp: new Date().toISOString(),
+        userID: createdUser.userID,
+      };
+
+      const geoResponse = await fetch("http://localhost:8080/api/geolocation/postGeolocation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(geolocationData),
+      });
+
+      if (!geoResponse.ok) {
+        throw new Error(`HTTP error! status: ${geoResponse.status}`);
+      }
+
       navigate('/login');
     } catch (error) {
       console.error("Failed to fetch:", error);
@@ -72,27 +89,27 @@ const Signup = () => {
         <form className="signup-form" onSubmit={handleSubmit}>
           <h2>Sign Up</h2>
           <input 
-    type="text" 
-    placeholder="Full Name" 
-    value={name} 
-    onChange={(e) => setName(e.target.value)} 
-    required 
-  />
-  <input 
-    type="email" 
-    placeholder="Email" 
-    value={email} 
-    onChange={(e) => setEmail(e.target.value)} 
-    required 
-  />
-  <input 
-    type="password" 
-    placeholder="Password" 
-    value={password} 
-    onChange={(e) => setPassword(e.target.value)} 
-    required 
-  />
-  <button type="submit" onClick={handleSubmit}>Register</button>
+            type="text" 
+            placeholder="Username" 
+            value={name} 
+            onChange={(e) => setName(e.target.value)} 
+            required 
+          />
+          <input 
+            type="email" 
+            placeholder="Email" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            required 
+          />
+          <input 
+            type="password" 
+            placeholder="Password" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            required 
+          />
+          <button type="submit" onClick={handleSubmit}>Register</button>
         </form>
         <p>
           Already have an account? <button className="link-button" onClick={handleLogin}>Login</button>
