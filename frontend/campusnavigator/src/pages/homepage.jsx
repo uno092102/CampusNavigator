@@ -1,152 +1,117 @@
-import React from 'react';
+// frontend/campusnavigator/src/pages/homepage.jsx
+import React, { useState, useEffect } from 'react';
+import { FaSearch } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
-const Homepage = () => {
-  const styles = {
-    homepage: {
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100vh',
-    },
-    header: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      padding: '1rem',
-      backgroundColor: '#f5f5f5',
-      borderBottom: '1px solid #ddd',
-    },
-    searchBar: {
-      display: 'flex',
-      gap: '0.5rem',
-    },
-    dropdown: {
-      padding: '0.5rem',
-      borderRadius: '5px',
-      border: '1px solid #ccc',
-    },
-    contactInfo: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '1rem',
-    },
-    content: {
-      display: 'flex',
-      flex: 1,
-    },
-    poiList: {
-      width: '40%',
-      padding: '1rem',
-      overflowY: 'auto',
-      borderRight: '1px solid #ddd',
-    },
-    poiCategories: {
-      display: 'flex',
-      gap: '0.5rem',
-    },
-    button: {
-      padding: '0.5rem',
-      borderRadius: '5px',
-      backgroundColor: '#f0f0f0',
-      border: 'none',
-      cursor: 'pointer',
-    },
-    poiItem: {
-      display: 'flex',
-      gap: '1rem',
-      marginTop: '1rem',
-      backgroundColor: '#fff',
-      borderRadius: '5px',
-      boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-      padding: '0.5rem',
-    },
-    poiImage: {
-      width: '80px',
-      height: '80px',
-      borderRadius: '5px',
-    },
-    poiInfo: {
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-    },
-    mapContainer: {
-      width: '60%',
-      height: '100%',
-    },
-  };
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+
+const HomePage = () => {
+  const username = "MasuRii";
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [buildings, setBuildings] = useState([]);
+
+  const bounds = [
+    [10.294210, -236.118527],
+    [10.294163, -236.120041],
+    [10.294622, -236.118651],
+    [10.296511, -236.120567],
+    [10.296480, -236.119080],
+  ];
+
+  useEffect(() => {
+    fetch('http://localhost:8080/api/buildings')
+      .then(response => response.json())
+      .then(data => setBuildings(data))
+      .catch(error => console.error(error));
+  }, []);
 
   return (
-    <div style={styles.homepage}>
-      {/* Header Section */}
-      <header style={styles.header}>
-        <div style={styles.searchBar}>
-          <select style={styles.dropdown}>
-            <option value="POI">POI</option>
-          </select>
-          <select style={styles.dropdown}>
-            <option value="NGE">NGE</option>
-          </select>
-          <button style={styles.dropdown}>🔍</button>
-        </div>
-        <div style={styles.contactInfo}>
-          <span>📞 +63 32 261 7741</span>
-          <span>Math Lee</span>
+    <div>
+      <header style={{ backgroundColor: '#7757FF', color: '#FFFFFF', padding: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img src="/logoimg/Logodark.svg" alt="Logo" style={{ width: '60%', marginRight: '20px' }} />
+            <div style={{ position: 'relative', width: '300px' }}>
+              <FaSearch style={{ position: 'absolute', top: '50%', left: '10px', transform: 'translateY(-50%)', color: '#7757FF' }} />
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                style={{ 
+                  width: '100%', 
+                  padding: '10px 10px 10px 40px', 
+                  borderRadius: '20px', 
+                  border: '1px solid #FFFFFF', 
+                  backgroundColor: '#FFFFFF', 
+                  color: '#7757FF'
+                }} 
+              />
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+            <img 
+              src="https://placehold.co/600x400@2x.png" 
+              alt="User Profile" 
+              style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px', cursor: 'pointer' }} 
+              onClick={() => setDropdownOpen(!dropdownOpen)} 
+            />
+            <span style={{ marginRight: '10px' }}>{username}</span>
+            {dropdownOpen && (
+              <div style={{ 
+                position: 'absolute', 
+                top: '60px', 
+                right: '0', 
+                backgroundColor: '#FFFFFF', 
+                color: '#7757FF', 
+                borderRadius: '8px', 
+                boxShadow: '0 4px 8px rgba(0,0,0,0.2)', 
+                overflow: 'hidden' 
+              }}>
+                <Link to="/profile" style={{ display: 'block', padding: '10px 20px', textDecoration: 'none', color: '#7757FF' }}>My Profile</Link>
+                <Link to="/settings" style={{ display: 'block', padding: '10px 20px', textDecoration: 'none', color: '#7757FF' }}>Settings</Link>
+                <Link to="/logout" style={{ display: 'block', padding: '10px 20px', textDecoration: 'none', color: '#7757FF' }}>Logout</Link>
+              </div>
+            )}
+          </div>
         </div>
       </header>
-
-      {/* Main Content */}
-      <div style={styles.content}>
-        {/* Points of Interest List */}
-        <div style={styles.poiList}>
-          <h2>Point of Interest</h2>
-          <div style={styles.poiCategories}>
-            <button style={styles.button}>Buildings</button>
-            <button style={styles.button}>Amenities</button>
-            <button style={styles.button}>Academic Departments</button>
-          </div>
-          
-          {/* POI Item */}
-          <div style={styles.poiItem}>
-            <img src="nge_building.jpg" alt="NGE Building" style={styles.poiImage} />
-            <div style={styles.poiInfo}>
-              <h3>NGE Building</h3>
-              <p>Also known as the Science and Technology Building, inaugurated in 2002.</p>
-              <span>Dr. Nicolas G. Escario</span>
-            </div>
-          </div>
-
-          <div style={styles.poiItem}>
-            <img src="college_library.jpg" alt="College Library" style={styles.poiImage} />
-            <div style={styles.poiInfo}>
-              <h3>College Library</h3>
-              <p>Serves as a vital academic support hub.</p>
-              <span>Cebu Institute of Technology - University</span>
-            </div>
-          </div>
-
-          <div style={styles.poiItem}>
-            <img src="gle_building.jpg" alt="GLE Building" style={styles.poiImage} />
-            <div style={styles.poiInfo}>
-              <h3>GLE Building</h3>
-              <p>Multi-purpose building with lecture hall-style rooms.</p>
-              <span>Gregorio L. Escario Building</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Map Section */}
-        <div style={styles.mapContainer}>
-          <MapContainer center={[34.0522, -118.2437]} zoom={13} style={{ height: '100%', width: '100%' }}>
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            <Marker position={[34.0522, -118.2437]}>
-              <Popup>GLE Building</Popup>
+      <main style={{ height: '100vh' }}>
+        <MapContainer 
+          center={[10.294210, -236.118527]} 
+          zoom={18} 
+          maxZoom={18} 
+          style={{ height: '100vh', width: '100%' }}
+          maxBounds={bounds}
+          maxBoundsViscosity={1.0}
+          zoomControl={false}
+          scrollWheelZoom={false}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution="&copy; OpenStreetMap contributors"
+          />
+          {buildings.map(building => (
+            <Marker key={building.buildingID} position={[building.locationLatitude, building.locationLongitude]}>
+              <Popup>
+                <strong>{building.name}</strong><br />{building.description}
+              </Popup>
             </Marker>
-          </MapContainer>
-        </div>
-      </div>
+          ))}
+        </MapContainer>
+      </main>
     </div>
   );
-};
+}
 
-export default Homepage;
+export default HomePage;
