@@ -1,4 +1,3 @@
-// frontend/campusnavigator/src/pages/homepage.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
