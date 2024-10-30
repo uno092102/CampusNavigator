@@ -59,8 +59,9 @@ const HomePage = () => {
 
   const handleMarkerClick = (building) => {
     const imageURL = getMapImage(building.buildingID);
-    console.log('Marker clicked:', building, 'Image URL:', imageURL);
-    setSelectedBuilding({ ...building, imageURL });
+    const buildingPOIs = building.pointsOfInterest;
+    console.log('Marker clicked:', building, 'Image URL:', imageURL, 'POIs:', buildingPOIs);
+    setSelectedBuilding({ ...building, imageURL, pois: buildingPOIs });
   };
 
   const handleCloseCard = () => {
@@ -69,7 +70,7 @@ const HomePage = () => {
   };
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', height: '100vh', width: '100%' }}>
       <header style={{ backgroundColor: '#7757FF', color: '#FFFFFF', padding: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -120,67 +121,83 @@ const HomePage = () => {
           </div>
         </div>
       </header>
-      <main style={{ height: '100vh' }}>
-        <MapContainer 
-          center={[10.294210, -236.118527]} 
-          zoom={18} 
-          maxZoom={18} 
-          style={{ height: '100vh', width: '100%' }}
-          maxBounds={bounds}
-          maxBoundsViscosity={1.0}
-          zoomControl={false}
-          scrollWheelZoom={false}
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution="&copy; OpenStreetMap contributors"
-          />
-          {buildings.map(building => (
-            <Marker 
-              key={building.buildingID} 
-              position={[building.locationLatitude, building.locationLongitude]} 
-              eventHandlers={{
-                click: () => handleMarkerClick(building)
-              }}
-            >
-              <Popup>
-                <strong>{building.name}</strong><br />
-                {building.description}
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-        {selectedBuilding && (
-          <div style={{
+      <MapContainer 
+        center={[10.294210, -236.118527]} 
+        zoom={18} 
+        maxZoom={18} 
+        style={{ height: 'calc(100vh - 80px)', width: '100%' }}
+        maxBounds={bounds}
+        maxBoundsViscosity={1.0}
+        zoomControl={false}
+        scrollWheelZoom={false}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap contributors"
+        />
+        {buildings.map(building => (
+          <Marker 
+            key={building.buildingID} 
+            position={[building.locationLatitude, building.locationLongitude]} 
+            eventHandlers={{
+              click: () => handleMarkerClick(building)
+            }}
+          >
+            <Popup>
+              <strong>{building.name}</strong><br />
+              {building.description}
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+      {selectedBuilding && (
+        <div style={{
+          position: 'absolute',
+          top: '100px',
+          left: '20px',
+          width: '300px',
+          backgroundColor: '#FFFFFF',
+          borderRadius: '8px',
+          boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+          padding: '20px',
+          zIndex: 1000,
+          overflowY: 'auto',
+          maxHeight: '80vh'
+        }}>
+          <button onClick={handleCloseCard} style={{
             position: 'absolute',
-            top: '80px',
-            left: '20px',
-            width: '300px',
-            backgroundColor: '#FFFFFF',
-            borderRadius: '8px',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-            padding: '20px',
-            zIndex: 1000
-          }}>
-            <button onClick={handleCloseCard} style={{
-              position: 'absolute',
-              top: '10px',
-              right: '10px',
-              background: 'none',
-              border: 'none',
-              fontSize: '16px',
-              cursor: 'pointer'
-            }}>×</button>
-            <h2>{selectedBuilding.name}</h2>
-            {selectedBuilding.imageURL ? (
-              <img src={selectedBuilding.imageURL} alt={selectedBuilding.name} style={{ width: '100%', borderRadius: '4px' }} />
-            ) : (
-              <p>No image available</p>
-            )}
-            <p>{selectedBuilding.description}</p>
-          </div>
-        )}
-      </main>
+            top: '10px',
+            right: '10px',
+            background: 'none',
+            border: 'none',
+            fontSize: '16px',
+            cursor: 'pointer'
+          }}>×</button>
+          <h2 style={{ color: '#7757FF' }}>{selectedBuilding.name}</h2>
+          {selectedBuilding.imageURL ? (
+            <img src={selectedBuilding.imageURL} alt={selectedBuilding.name} style={{ width: '100%', borderRadius: '4px' }} />
+          ) : (
+            <p>No image available</p>
+          )}
+          <p>{selectedBuilding.description}</p>
+          {selectedBuilding.pois && selectedBuilding.pois.length > 0 ? (
+            <div>
+              <h3 style={{ color: '#7757FF' }}>Points of Interest</h3>
+              <ul style={{ listStyleType: 'none', padding: 0 }}>
+                {selectedBuilding.pois.map(poi => (
+                  <li key={poi.poi_ID} style={{ marginBottom: '10px', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
+                    <strong style={{ color: '#7757FF' }}>{poi.name}</strong><br />
+                    <span>{poi.description}</span><br />
+                    <em>Type: {poi.type}</em>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p>No Points of Interest available.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
