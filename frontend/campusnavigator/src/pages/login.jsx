@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './signup.css';
+import './login.css';
 
 const backgroundImages = [
   "/backgroundimg/Accreditation-Room.jpg",
@@ -21,6 +22,9 @@ const backgroundImages = [
 const Login = () => {
   const navigate = useNavigate();
   const [currentImage, setCurrentImage] = useState(backgroundImages[0]);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     document.title = "Login - CampusNavigator";
@@ -32,9 +36,25 @@ const Login = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/');
+    try {
+      const response = await fetch("http://localhost:8080/api/user/getAllSearch");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const users = await response.json();
+      const user = users.find(user => user.email === email && user.password === password);
+
+      if (user) {
+        navigate('/homepage');
+      } else {
+        setErrorMessage("Invalid email or password. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to fetch:", error);
+      setErrorMessage("An error occurred. Please try again later.");
+    }
   };
 
   const handleSignup = () => {
@@ -50,8 +70,22 @@ const Login = () => {
         <img src="/logoimg/Logolight.svg" alt="Logo" className="logo" />
         <form className="signup-form" onSubmit={handleSubmit}>
           <h2>Login</h2>
-          <input type="email" placeholder="Email" required />
-          <input type="password" placeholder="Password" required />
+         
+          <input 
+            type="email" 
+            placeholder="Email" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            required 
+          />
+          <input 
+            type="password" 
+            placeholder="Password" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            required 
+          />
+           {errorMessage && <p className="error-message">{errorMessage}</p>}
           <button type="submit">Login</button>
         </form>
         <p>
