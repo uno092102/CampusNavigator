@@ -6,71 +6,67 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import java.sql.Timestamp;
 
-
 @Entity
 public class GeolocationData {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int geolocation;
+    private int geolocationID;
 
     private int userID;
-    private float latitude;
-    private float longitude;
+    private double latitude;
+    private double longitude;
     private Timestamp timeStamp;
 
-    public GeolocationData()
-    {
+    public GeolocationData() {
         super();
     }
 
-    public GeolocationData(int geolocation, int userID, float latitude, float longitude, Timestamp timestamp)
-    {
+    public GeolocationData(int geolocationID, int userID, double latitude, double longitude, Timestamp timeStamp) {
         super();
-        this.geolocation = geolocation;
+        this.geolocationID = geolocationID;
         this.userID = userID;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.timeStamp = timeStamp;
     }
 
-
-    //SETTER
-    public void setGeolocation(int geolocation) {
-        this.geolocation = geolocation;
+    public void setGeolocationID(int geolocationID) {
+        this.geolocationID = geolocationID;
     }
+
     public void setUserID(int userID) {
         this.userID = userID;
     }
-    public void setLatitude(float latitude) {
+
+    public void setLatitude(double latitude) {
         this.latitude = latitude;
     }
-    public void setLongitude(float longitude) {
+
+    public void setLongitude(double longitude) {
         this.longitude = longitude;
     }
+
     public void setTimeStamp(Timestamp timeStamp) {
         this.timeStamp = timeStamp;
     }
 
-
-    //GETTER
-    public int getGeolocation() {
-        return geolocation;
+    public int getGeolocationID() {
+        return geolocationID;
     }
 
     public int getUserID() {
         return userID;
     }
 
-    public float getLatitude() {
+    public double getLatitude() {
         return latitude;
     }
 
-    public float getLongitude() {
+    public double getLongitude() {
         return longitude;
     }
 
     public Timestamp getTimeStamp() {
         return timeStamp;
     }
-
 }
-

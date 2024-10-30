@@ -1,10 +1,8 @@
 package com.campusnavigator.Service;
 
 import java.util.List;
-import javax.naming.NameNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.NoSuchElementException;
 import com.campusnavigator.Entity.GeolocationData;
 import com.campusnavigator.Repository.GeolocationRepository;
 
@@ -13,59 +11,37 @@ public class GeolocationService {
     @Autowired
     GeolocationRepository grepo;
 
-    public GeolocationService()
-    {
-        super();
-    }
-
-    //CREATE
-    public GeolocationData postGeolocationData(GeolocationData geolocation)
-    {
+    public GeolocationData postGeolocationData(GeolocationData geolocation) {
         return grepo.save(geolocation);
     }
 
-    //READ 
-    public List<GeolocationData>getAllGeolocation()
-    {
+    public List<GeolocationData> getAllGeolocation() {
         return grepo.findAll();
     }
 
-    //UPDATE
-    @SuppressWarnings("finally")
-    public GeolocationData putGeolocation(int geolocation, GeolocationData newGeolocation)
-    {
-        GeolocationData geolocationData = new GeolocationData();
+    public GeolocationData getGeolocationById(int geolocationID) {
+        return grepo.findById(geolocationID).orElse(null);
+    }
 
-        try {
-            geolocationData = grepo.findById(geolocation).get();
-
+    public GeolocationData putGeolocation(int geolocationID, GeolocationData newGeolocation) {
+        GeolocationData geolocationData = grepo.findById(geolocationID).orElse(null);
+        if (geolocationData != null) {
             geolocationData.setLatitude(newGeolocation.getLatitude());
             geolocationData.setLongitude(newGeolocation.getLongitude());
-        } catch (NoSuchElementException nex) {
-
-            throw new NameNotFoundException ("Geolocation Data : " + geolocation + " not found");
-            
-        }finally
-        {
+            geolocationData.setTimeStamp(newGeolocation.getTimeStamp());
+            geolocationData.setUserID(newGeolocation.getUserID());
             return grepo.save(geolocationData);
+        } else {
+            return null;
         }
     }
 
-    //DELETE
-    public String deleteGeolocation(int geolocation)
-    {
-        String msg = "";
-
-        if(grepo.findById(geolocation)!= null)
-        {
-            grepo.deleteById(geolocation);
-            msg = "Geolocation Data Successfully deleted!";
+    public String deleteGeolocation(int geolocationID) {
+        if (grepo.existsById(geolocationID)) {
+            grepo.deleteById(geolocationID);
+            return "Geolocation Data Successfully deleted!";
+        } else {
+            return geolocationID + " NOT FOUND";
         }
-        else
-        {
-            msg = geolocation + " NOT FOUND";
-        }
-
-        return msg;
     }
 }
