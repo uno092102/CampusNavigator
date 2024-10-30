@@ -16,6 +16,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
+const redIcon = L.divIcon({
+  className: 'custom-div-icon',
+  html: "<div style='background-color:red; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;'></div>",
+  iconSize: [20, 20],
+  iconAnchor: [10, 10]
+});
+
 const HomePage = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -25,6 +32,7 @@ const HomePage = () => {
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
   const searchRef = useRef(null);
 
   const bounds = [
@@ -34,6 +42,10 @@ const HomePage = () => {
     [10.296511, -236.120567],
     [10.296480, -236.119080],
   ];
+
+  useEffect(() => {
+    document.title = "Home - CampusNavigator";
+  }, []);
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user'));
@@ -59,6 +71,20 @@ const HomePage = () => {
       .catch(error => console.error('Error fetching maps:', error));
   }, []);
 
+  useEffect(() => {
+    if (user) {
+      fetch('http://localhost:8080/api/geolocation/getAllGeolocation')
+        .then(response => response.json())
+        .then(data => {
+          const userGeo = data.find(g => g.userID === user.userID);
+          if (userGeo) {
+            setUserLocation({ latitude: userGeo.latitude, longitude: userGeo.longitude });
+          }
+        })
+        .catch(error => console.error('Error fetching user geolocation:', error));
+    }
+  }, [user]);
+
   const getMapImage = (buildingID) => {
     const building = buildings.find(b => b.buildingID === buildingID);
     if (!building || !building.mapData) return null;
@@ -80,10 +106,10 @@ const HomePage = () => {
     e.preventDefault();
     const text = searchText.trim().toLowerCase();
     if (!text) return;
-    const matchedBuildings = buildings.filter(b => 
+    const matchedBuildings = buildings.filter(b =>
       (b.name && b.name.toLowerCase().includes(text)) ||
       (b.description && b.description.toLowerCase().includes(text)) ||
-      (b.pointsOfInterest && b.pointsOfInterest.some(p => 
+      (b.pointsOfInterest && b.pointsOfInterest.some(p =>
         (p.name && p.name.toLowerCase().includes(text)) ||
         (p.description && p.description.toLowerCase().includes(text))
       ))
@@ -123,7 +149,6 @@ const HomePage = () => {
   };
 
   const handleEnableDevelopersMode = () => {
-    // Implementation for enabling developer's mode can be added here
   };
 
   return (
@@ -134,19 +159,19 @@ const HomePage = () => {
             <img src="/logoimg/Logodark.svg" alt="Logo" style={{ width: '60%', marginRight: '20px' }} />
             <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '300px' }} ref={searchRef}>
               <FaSearch style={{ position: 'absolute', top: '50%', left: '10px', transform: 'translateY(-50%)', color: '#7757FF' }} />
-              <input 
-                type="text" 
-                placeholder="Search..." 
+              <input
+                type="text"
+                placeholder="Search..."
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                style={{ 
-                  width: '100%', 
-                  padding: '10px 10px 10px 40px', 
-                  borderRadius: '20px', 
-                  border: '1px solid #FFFFFF', 
-                  backgroundColor: '#FFFFFF', 
+                style={{
+                  width: '100%',
+                  padding: '10px 10px 10px 40px',
+                  borderRadius: '20px',
+                  border: '1px solid #FFFFFF',
+                  backgroundColor: '#FFFFFF',
                   color: '#7757FF'
-                }} 
+                }}
               />
               {searchResults.length > 0 && (
                 <div style={{
@@ -172,24 +197,24 @@ const HomePage = () => {
             </form>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
-            <img 
-              src="https://placehold.co/600x400@2x.png" 
-              alt="User Profile" 
-              style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px', cursor: 'pointer' }} 
+            <img
+              src="https://picsum.photos/200/300"
+              alt="User Profile"
+              style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px', cursor: 'pointer' }}
               onClick={() => {
                 setDropdownOpen(!dropdownOpen);
-              }} 
+              }}
             />
             <span style={{ marginRight: '10px' }}>{user ? user.name : ''}</span>
             {dropdownOpen && (
-              <div style={{ 
-                position: 'absolute', 
-                top: '60px', 
-                right: '0', 
-                backgroundColor: '#FFFFFF', 
-                color: '#7757FF', 
-                borderRadius: '8px', 
-                boxShadow: '0 4px 8px rgba(0,0,0,0.2)', 
+              <div style={{
+                position: 'absolute',
+                top: '60px',
+                right: '0',
+                backgroundColor: '#FFFFFF',
+                color: '#7757FF',
+                borderRadius: '8px',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
                 overflow: 'hidden',
                 zIndex: 1001
               }}>
@@ -204,10 +229,10 @@ const HomePage = () => {
           </div>
         </div>
       </header>
-      <MapContainer 
-        center={[10.294210, -236.118527]} 
-        zoom={18} 
-        maxZoom={18} 
+      <MapContainer
+        center={[10.294210, -236.118527]}
+        zoom={18}
+        maxZoom={18}
         style={{ height: 'calc(100vh - 80px)', width: '100%' }}
         maxBounds={bounds}
         maxBoundsViscosity={1.0}
@@ -219,9 +244,9 @@ const HomePage = () => {
           attribution="&copy; OpenStreetMap contributors"
         />
         {buildings.map(building => (
-          <Marker 
-            key={building.buildingID} 
-            position={[building.locationLatitude, building.locationLongitude]} 
+          <Marker
+            key={building.buildingID}
+            position={[building.locationLatitude, building.locationLongitude]}
             eventHandlers={{
               click: () => handleMarkerClick(building)
             }}
@@ -232,6 +257,13 @@ const HomePage = () => {
             </Popup>
           </Marker>
         ))}
+        {userLocation && (
+          <Marker position={[userLocation.latitude, userLocation.longitude]} icon={redIcon}>
+            <Popup>
+              You're Here
+            </Popup>
+          </Marker>
+        )}
       </MapContainer>
       {selectedBuilding && (
         <div style={{
