@@ -44,6 +44,12 @@ const HomePage = () => {
     description: '',
     type: ''
   });
+  const [editingPOI, setEditingPOI] = useState(null);
+  const [editPOIData, setEditPOIData] = useState({
+    name: '',
+    description: '',
+    type: ''
+  });
   const searchRef = useRef(null);
   const bounds = [
     [10.294210, -236.118527],
@@ -103,6 +109,7 @@ const HomePage = () => {
 
   const handleCloseCard = () => {
     setSelectedBuilding(null);
+    setEditingPOI(null);
   };
 
   const handleSearchSubmit = (e) => {
@@ -245,6 +252,61 @@ const HomePage = () => {
       setNewPOIData({ name: '', description: '', type: '' });
     })
     .catch(error => console.error('Error adding new POI:', error));
+  };
+
+  const handleDeletePOI = (poiID) => {
+    fetch(`http://localhost:8080/api/pois/${poiID}`, {
+      method: 'DELETE',
+    })
+    .then(() => {
+      setSelectedBuilding(prevBuilding => ({
+        ...prevBuilding,
+        pois: prevBuilding.pois.filter(poi => poi.poi_ID !== poiID)
+      }));
+    })
+    .catch(error => console.error('Error deleting POI:', error));
+  };
+
+  const handleEditPOI = (poi) => {
+    setEditingPOI(poi);
+    setEditPOIData({
+      name: poi.name,
+      description: poi.description,
+      type: poi.type
+    });
+  };
+
+  const handleEditPOIChange = (e) => {
+    const { name, value } = e.target;
+    setEditPOIData(prevData => ({
+      ...prevData,
+      [name]: value
+    }));
+  };
+
+  const handleSubmitEditPOI = (e) => {
+    e.preventDefault();
+    const data = {
+      buildingId: selectedBuilding.buildingID,
+      name: editPOIData.name,
+      description: editPOIData.description,
+      type: editPOIData.type
+    };
+    fetch(`http://localhost:8080/api/pois/${editingPOI.poi_ID}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(() => {
+      setSelectedBuilding(prevBuilding => ({
+        ...prevBuilding,
+        pois: prevBuilding.pois.map(poi =>
+          poi.poi_ID === editingPOI.poi_ID ? { ...poi, ...data, poi_ID: editingPOI.poi_ID } : poi
+        )
+      }));
+      setEditingPOI(null);
+    })
+    .catch(error => console.error('Error editing POI:', error));
   };
 
   const MapClickHandler = () => {
@@ -406,6 +468,27 @@ const HomePage = () => {
                     <strong style={{ color: '#7757FF' }}>{poi.name}</strong><br />
                     <span>{poi.description}</span><br />
                     <em>Type: {poi.type}</em>
+                    {developerMode && (
+                      <div style={{ marginTop: '5px' }}>
+                        <button onClick={() => handleEditPOI(poi)} style={{
+                          marginRight: '5px',
+                          backgroundColor: '#7757FF',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          padding: '5px',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}>Edit</button>
+                        <button onClick={() => handleDeletePOI(poi.poi_ID)} style={{
+                          backgroundColor: 'red',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          padding: '5px',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}>Delete</button>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -413,7 +496,35 @@ const HomePage = () => {
           ) : (
             <p>No Points of Interest available.</p>
           )}
-          {developerMode && (
+          {editingPOI && (
+            <div>
+              <h3 style={{ color: '#7757FF' }}>Edit Point of Interest</h3>
+              <form onSubmit={handleSubmitEditPOI}>
+                <div style={{ marginBottom: '10px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px' }}>POI Name</label>
+                  <input type="text" name="name" value={editPOIData.name} onChange={handleEditPOIChange} style={{ width: '100%', padding: '8px' }} required />
+                </div>
+                <div style={{ marginBottom: '10px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px' }}>Description</label>
+                  <textarea name="description" value={editPOIData.description} onChange={handleEditPOIChange} style={{ width: '100%', padding: '8px' }} required />
+                </div>
+                <div style={{ marginBottom: '10px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px' }}>Type</label>
+                  <input type="text" name="type" value={editPOIData.type} onChange={handleEditPOIChange} style={{ width: '100%', padding: '8px' }} required />
+                </div>
+                <button type="submit" style={{
+                  backgroundColor: '#7757FF',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '10px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  width: '100%'
+                }}>Save Changes</button>
+              </form>
+            </div>
+          )}
+          {developerMode && !editingPOI && (
             <div>
               <h3 style={{ color: '#7757FF' }}>Add Point of Interest</h3>
               <form onSubmit={handleSubmitNewPOI}>
