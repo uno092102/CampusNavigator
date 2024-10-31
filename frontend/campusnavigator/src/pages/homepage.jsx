@@ -31,6 +31,7 @@ const HomePage = () => {
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
+  const [userGeolocationId, setUserGeolocationId] = useState(null);
   const [developerMode, setDeveloperMode] = useState(false);
   const [addingBuilding, setAddingBuilding] = useState(false);
   const [newBuildingPosition, setNewBuildingPosition] = useState(null);
@@ -50,6 +51,7 @@ const HomePage = () => {
     description: '',
     type: ''
   });
+  const [updatingGeolocation, setUpdatingGeolocation] = useState(false);
   const searchRef = useRef(null);
   const bounds = [
     [10.294210, -236.118527],
@@ -89,6 +91,25 @@ const HomePage = () => {
           const userGeo = data.find(g => g.userID === user.userID);
           if (userGeo) {
             setUserLocation({ latitude: userGeo.latitude, longitude: userGeo.longitude });
+            setUserGeolocationId(userGeo.geolocationID);
+          } else {
+            const newGeoData = {
+              latitude: 0,
+              longitude: 0,
+              timeStamp: new Date().toISOString(),
+              userID: user.userID
+            };
+            fetch('http://localhost:8080/api/geolocation/postGeolocation', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(newGeoData)
+            })
+            .then(response => response.json())
+            .then(newGeo => {
+              setUserLocation({ latitude: newGeo.latitude, longitude: newGeo.longitude });
+              setUserGeolocationId(newGeo.geolocationID);
+            })
+            .catch(error => console.error('Error creating user geolocation:', error));
           }
         })
         .catch(error => console.error('Error fetching user geolocation:', error));
@@ -171,6 +192,23 @@ const HomePage = () => {
     if (addingBuilding) {
       setNewBuildingPosition(e.latlng);
       setAddingBuilding(false);
+    } else if (updatingGeolocation) {
+      const data = {
+        latitude: e.latlng.lat,
+        longitude: e.latlng.lng,
+        timeStamp: new Date().toISOString(),
+        userID: user.userID
+      };
+      fetch(`http://localhost:8080/api/geolocation/putGeolocation/${userGeolocationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(() => {
+        setUserLocation({ latitude: data.latitude, longitude: data.longitude });
+        setUpdatingGeolocation(false);
+      })
+      .catch(error => console.error('Error updating geolocation:', error));
     }
   };
 
@@ -309,6 +347,10 @@ const HomePage = () => {
     .catch(error => console.error('Error editing POI:', error));
   };
 
+  const handleUpdateGeolocationClick = () => {
+    setUpdatingGeolocation(true);
+  };
+
   const MapClickHandler = () => {
     useMapEvent('click', handleMapClick);
     return null;
@@ -427,7 +469,7 @@ const HomePage = () => {
             </Popup>
           </Marker>
         )}
-        {addingBuilding && <MapClickHandler />}
+        {(addingBuilding || updatingGeolocation) && <MapClickHandler />}
       </MapContainer>
       {selectedBuilding && (
         <div style={{
@@ -583,9 +625,20 @@ const HomePage = () => {
             border: 'none',
             padding: '10px',
             borderRadius: '4px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            marginRight: '10px'
           }}>
             <FaPlus /> Add Building
+          </button>
+          <button onClick={handleUpdateGeolocationClick} style={{
+            backgroundColor: '#7757FF',
+            color: '#FFFFFF',
+            border: 'none',
+            padding: '10px',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}>
+            Update Geolocation
           </button>
         </div>
       )}
