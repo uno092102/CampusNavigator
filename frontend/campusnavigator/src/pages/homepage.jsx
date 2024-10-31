@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvent } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -9,7 +9,6 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 delete L.Icon.Default.prototype._getIconUrl;
-
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
   iconUrl: markerIcon,
@@ -28,13 +27,19 @@ const HomePage = () => {
   const [user, setUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [buildings, setBuildings] = useState([]);
-  const [maps, setMaps] = useState([]);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
+  const [developerMode, setDeveloperMode] = useState(false);
+  const [addingBuilding, setAddingBuilding] = useState(false);
+  const [newBuildingPosition, setNewBuildingPosition] = useState(null);
+  const [newBuildingData, setNewBuildingData] = useState({
+    name: '',
+    description: '',
+    mapImageURL: ''
+  });
   const searchRef = useRef(null);
-
   const bounds = [
     [10.294210, -236.118527],
     [10.294163, -236.120041],
@@ -63,12 +68,6 @@ const HomePage = () => {
         setBuildings(data);
       })
       .catch(error => console.error('Error fetching buildings:', error));
-    fetch('http://localhost:8080/api/maps')
-      .then(response => response.json())
-      .then(data => {
-        setMaps(data);
-      })
-      .catch(error => console.error('Error fetching maps:', error));
   }, []);
 
   useEffect(() => {
@@ -88,8 +87,7 @@ const HomePage = () => {
   const getMapImage = (buildingID) => {
     const building = buildings.find(b => b.buildingID === buildingID);
     if (!building || !building.mapData) return null;
-    const map = maps.find(m => m.mapID === building.mapData.mapID);
-    return map ? map.mapImageURL : null;
+    return building.mapData.mapImageURL;
   };
 
   const handleMarkerClick = (building) => {
@@ -149,6 +147,72 @@ const HomePage = () => {
   };
 
   const handleEnableDevelopersMode = () => {
+    setDeveloperMode(true);
+  };
+
+  const handleAddBuildingClick = () => {
+    setAddingBuilding(true);
+    setNewBuildingPosition(null);
+  };
+
+  const handleMapClick = (e) => {
+    if (addingBuilding) {
+      setNewBuildingPosition(e.latlng);
+      setAddingBuilding(false);
+    }
+  };
+
+  const handleNewBuildingChange = (e) => {
+    const { name, value } = e.target;
+    setNewBuildingData(prevData => ({
+      ...prevData,
+      [name]: value
+    }));
+  };
+
+  const handleSubmitNewBuilding = (e) => {
+    e.preventDefault();
+    const data = {
+      name: newBuildingData.name,
+      description: newBuildingData.description,
+      locationLatitude: newBuildingPosition.lat,
+      locationLongitude: newBuildingPosition.lng,
+      mapData: {
+        mapImageURL: newBuildingData.mapImageURL
+      }
+    };
+    fetch('http://localhost:8080/api/buildings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(responseData => {
+      setBuildings(prevBuildings => [...prevBuildings, responseData]);
+      setNewBuildingPosition(null);
+      setNewBuildingData({ name: '', description: '', mapImageURL: '' });
+    })
+    .catch(error => console.error('Error adding new building:', error));
+  };
+
+  const handleDeleteBuilding = (buildingID, mapID) => {
+    fetch(`http://localhost:8080/api/buildings/${buildingID}`, {
+      method: 'DELETE',
+    })
+    .then(() => {
+      fetch(`http://localhost:8080/api/maps/${mapID}`, {
+        method: 'DELETE',
+      })
+      .catch(error => console.error('Error deleting map data:', error));
+      setBuildings(prevBuildings => prevBuildings.filter(b => b.buildingID !== buildingID));
+      setSelectedBuilding(null);
+    })
+    .catch(error => console.error('Error deleting building:', error));
+  };
+
+  const MapClickHandler = () => {
+    useMapEvent('click', handleMapClick);
+    return null;
   };
 
   return (
@@ -264,6 +328,7 @@ const HomePage = () => {
             </Popup>
           </Marker>
         )}
+        {addingBuilding && <MapClickHandler />}
       </MapContainer>
       {selectedBuilding && (
         <div style={{
@@ -311,6 +376,80 @@ const HomePage = () => {
           ) : (
             <p>No Points of Interest available.</p>
           )}
+          {developerMode && (
+            <button onClick={() => handleDeleteBuilding(selectedBuilding.buildingID, selectedBuilding.mapData.mapID)} style={{
+              marginTop: '10px',
+              backgroundColor: 'red',
+              color: '#FFFFFF',
+              border: 'none',
+              padding: '10px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              width: '100%'
+            }}>Delete Building</button>
+          )}
+        </div>
+      )}
+      {developerMode && (
+        <div style={{
+          position: 'absolute',
+          bottom: '20px',
+          right: '20px',
+          backgroundColor: '#FFFFFF',
+          borderRadius: '8px',
+          padding: '10px',
+          boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+          zIndex: 1000
+        }}>
+          <button onClick={handleAddBuildingClick} style={{
+            backgroundColor: '#7757FF',
+            color: '#FFFFFF',
+            border: 'none',
+            padding: '10px',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}>
+            <FaPlus /> Add Building
+          </button>
+        </div>
+      )}
+      {newBuildingPosition && (
+        <div style={{
+          position: 'absolute',
+          top: '100px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '400px',
+          backgroundColor: '#FFFFFF',
+          borderRadius: '8px',
+          padding: '20px',
+          boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+          zIndex: 1000
+        }}>
+          <h2 style={{ color: '#7757FF' }}>Add New Building</h2>
+          <form onSubmit={handleSubmitNewBuilding}>
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>Building Name</label>
+              <input type="text" name="name" value={newBuildingData.name} onChange={handleNewBuildingChange} style={{ width: '100%', padding: '8px' }} required />
+            </div>
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>Building Description</label>
+              <textarea name="description" value={newBuildingData.description} onChange={handleNewBuildingChange} style={{ width: '100%', padding: '8px' }} required />
+            </div>
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>Building Image URL</label>
+              <input type="text" name="mapImageURL" value={newBuildingData.mapImageURL} onChange={handleNewBuildingChange} style={{ width: '100%', padding: '8px' }} required />
+            </div>
+            <button type="submit" style={{
+              backgroundColor: '#7757FF',
+              color: '#FFFFFF',
+              border: 'none',
+              padding: '10px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              width: '100%'
+            }}>Add Building</button>
+          </form>
         </div>
       )}
     </div>
