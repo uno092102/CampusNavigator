@@ -39,6 +39,11 @@ const HomePage = () => {
     description: '',
     mapImageURL: ''
   });
+  const [newPOIData, setNewPOIData] = useState({
+    name: '',
+    description: '',
+    type: ''
+  });
   const searchRef = useRef(null);
   const bounds = [
     [10.294210, -236.118527],
@@ -92,7 +97,7 @@ const HomePage = () => {
 
   const handleMarkerClick = (building) => {
     const imageURL = getMapImage(building.buildingID);
-    const buildingPOIs = building.pointsOfInterest;
+    const buildingPOIs = building.pointsOfInterest || [];
     setSelectedBuilding({ ...building, imageURL, pois: buildingPOIs });
   };
 
@@ -208,6 +213,38 @@ const HomePage = () => {
       setSelectedBuilding(null);
     })
     .catch(error => console.error('Error deleting building:', error));
+  };
+
+  const handleNewPOIChange = (e) => {
+    const { name, value } = e.target;
+    setNewPOIData(prevData => ({
+      ...prevData,
+      [name]: value
+    }));
+  };
+
+  const handleSubmitNewPOI = (e) => {
+    e.preventDefault();
+    const data = {
+      buildingId: selectedBuilding.buildingID,
+      name: newPOIData.name,
+      description: newPOIData.description,
+      type: newPOIData.type
+    };
+    fetch('http://localhost:8080/api/pois', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(newPOI => {
+      setSelectedBuilding(prevBuilding => ({
+        ...prevBuilding,
+        pois: [...prevBuilding.pois, newPOI]
+      }));
+      setNewPOIData({ name: '', description: '', type: '' });
+    })
+    .catch(error => console.error('Error adding new POI:', error));
   };
 
   const MapClickHandler = () => {
@@ -375,6 +412,34 @@ const HomePage = () => {
             </div>
           ) : (
             <p>No Points of Interest available.</p>
+          )}
+          {developerMode && (
+            <div>
+              <h3 style={{ color: '#7757FF' }}>Add Point of Interest</h3>
+              <form onSubmit={handleSubmitNewPOI}>
+                <div style={{ marginBottom: '10px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px' }}>POI Name</label>
+                  <input type="text" name="name" value={newPOIData.name} onChange={handleNewPOIChange} style={{ width: '100%', padding: '8px' }} required />
+                </div>
+                <div style={{ marginBottom: '10px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px' }}>Description</label>
+                  <textarea name="description" value={newPOIData.description} onChange={handleNewPOIChange} style={{ width: '100%', padding: '8px' }} required />
+                </div>
+                <div style={{ marginBottom: '10px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px' }}>Type</label>
+                  <input type="text" name="type" value={newPOIData.type} onChange={handleNewPOIChange} style={{ width: '100%', padding: '8px' }} required />
+                </div>
+                <button type="submit" style={{
+                  backgroundColor: '#7757FF',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '10px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  width: '100%'
+                }}>Add POI</button>
+              </form>
+            </div>
           )}
           {developerMode && (
             <button onClick={() => handleDeleteBuilding(selectedBuilding.buildingID, selectedBuilding.mapData.mapID)} style={{
