@@ -13,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/maps")
+@CrossOrigin
 public class MapDataController {
     private final MapDataService mapDataService;
     private final BuildingService buildingService;

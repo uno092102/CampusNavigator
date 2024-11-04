@@ -12,6 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/pois")
+@CrossOrigin
 public class PointOfInterestController {
     private final PointOfInterestService poiService;
     private final BuildingService buildingService;
