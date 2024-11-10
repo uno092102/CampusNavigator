@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,35 +19,40 @@ import com.campusnavigator.Entity.Feedback;
 import com.campusnavigator.Service.FeedbackService;
 
 @RestController
-@RequestMapping(path = "/api/feedback")
+@RequestMapping(method = RequestMethod.GET, path = "/api/feedback")
 @CrossOrigin
 public class FeedbackController {
 
     @Autowired
-    FeedbackService feedbackService;
+    FeedbackService fserv;
 
+    // TEST RUN
     @GetMapping("/print")
     public String print() {
         return "Feedback TEST";
     }
 
+    // CREATE
     @PostMapping("/postFeedback")
     public Feedback postFeedback(@RequestBody Feedback feedback) {
-        return feedbackService.postFeedback(feedback);
+        return fserv.postFeedback(feedback);
     }
 
-    @GetMapping("/getAllFeedback")
+    // READ
+    @GetMapping("/getFeedback")
     public List<Feedback> getAllFeedback() {
-        return feedbackService.getAllFeedback();
+        return fserv.getAllFeedback();
     }
 
+    // UPDATE
     @PutMapping("/putFeedback")
-    public Feedback putFeedback(@RequestParam int feedbackID, @RequestBody Feedback newFeedback) {
-        return feedbackService.putFeedback(feedbackID, newFeedback);
+    public Feedback putFeedbackRecord(@RequestParam int feedbackID, @RequestBody Feedback newFeedback) {
+        return fserv.putFeedback(feedbackID, newFeedback);
     }
 
+    // DELETE
     @DeleteMapping("/deleteFeedback/{feedbackID}")
     public String deleteFeedback(@PathVariable int feedbackID) {
-        return feedbackService.deleteFeedback(feedbackID);
+        return fserv.deleteFeedback(feedbackID);
     } 
 }

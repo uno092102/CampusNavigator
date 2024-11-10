@@ -1,6 +1,10 @@
 package com.campusnavigator.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
+
+import javax.naming.NameNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,30 +15,46 @@ import com.campusnavigator.Repository.FeedbackRepository;
 public class FeedbackService {
 
     @Autowired
-    private FeedbackRepository feedbackRepository;
+    private FeedbackRepository frepo;
+
+    public FeedbackService()
+    {
+        super();
+    }
 
     // Create 
     public Feedback postFeedback(Feedback feedback) {
-        return feedbackRepository.save(feedback);
+        return frepo.save(feedback);
     }
 
     // Read all 
     public List<Feedback> getAllFeedback() {
-        return feedbackRepository.findAll();
+        return frepo.findAll();
     }
 
     // Update 
-    public Feedback putFeedback(int feedbackID, Feedback newFeedback) {
-        return feedbackRepository.findById(feedbackID).map(feedback -> {
-            feedback.setComment(newFeedback.getComment());
-            feedback.setRating(newFeedback.getRating());
-            return feedbackRepository.save(feedback);
-        }).orElseThrow(() -> new RuntimeException("Feedback not found"));
+    @SuppressWarnings("finally")
+    public Feedback putFeedback(int feedbackID, Feedback newFeedback)
+    {
+        Feedback feed = new Feedback();
+
+        try {
+            feed = frepo.findById(feedbackID).get();
+
+            feed.setComment(newFeedback.getComment());
+            feed.setRating(newFeedback.getRating());
+        } catch (NoSuchElementException nex) {
+            throw new NameNotFoundException("Feedback ID: " + feedbackID + " not found");
+            // TODO: handle exception
+        }finally
+        {
+            return frepo.save(feed);
+        }
     }
 
     // Delete 
     public String deleteFeedback(int feedbackID) {
-        feedbackRepository.deleteById(feedbackID);
+        frepo.deleteById(feedbackID);
         return"Feedback Deleted Successfuly";
     }
 }

@@ -1,44 +1,63 @@
 package com.campusnavigator.Entity;
 
-import javax.persistence.Entity;
+
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
-import javax.persistence.Id;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
 
 @Entity
 public class Feedback {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private int feedbackID;
+
     private String comment;
     private int rating;
 
     // No-argument constructor
-    public Feedback() {}
-
-    // Getters and setters
-    public int getId() {
-        return id;
+    public Feedback() {
+        super();
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public Feedback(int feedbackID, String comment, int rating)
+    {
+        super();
+        this.feedbackID = feedbackID;
+        this.comment = comment;
+        this.rating = rating;
     }
 
-    public String getComment() {
-        return comment;
+    //SETTER
+    public void setFeedbackID(int feedbackID) {
+        this.feedbackID = feedbackID;
     }
 
     public void setComment(String comment) {
         this.comment = comment;
     }
 
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
+    //GETTERS
+    public int getFeedbackID() {
+        return feedbackID;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
     public int getRating() {
         return rating;
     }
 
-    public void setRating(int rating) {
-        this.rating = rating;
-    }
+  
+
+   
 }
