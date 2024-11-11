@@ -80,5 +80,7 @@ public class Building {
 
     public void setMapData(MapData mapData) {
         this.mapData = mapData;
+
+        //piolo gwapo kaayo oh yeah
     }
 }
