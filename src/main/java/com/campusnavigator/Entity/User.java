@@ -17,9 +17,10 @@ public class User {
     private String email;
     private String password;
     
-    public User(){
+    public User()
+    {
         super();
-}
+    }
 
 public User(int userID, String name, String role, String email, String password){
 
