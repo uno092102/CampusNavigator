@@ -7,6 +7,7 @@ import 'leaflet/dist/leaflet.css';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import { FaBell } from 'react-icons/fa';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -401,6 +402,20 @@ const HomePage = () => {
               )}
             </form>
           </div>
+          <div>
+          <a href="event" style={{ color: '#FFFFFF', width: '20px', marginRight: '10', textDecoration: 'none', fontSize: '18px' }}>Calendar</a>
+        </div>
+        <div>
+          <a href="event" style={{ color: '#FFFFFF', width: '20px', marginRight: '10', textDecoration: 'none', fontSize: '18px' }}>Campus Service</a>
+        </div>
+        <div>
+          <a href="event" style={{ color: '#FFFFFF', width: '20px', marginRight: '10', textDecoration: 'none', fontSize: '18px' }}>Announcement</a>
+        </div>
+        <div style={{ marginRight: '10px', cursor: 'pointer' }}>
+          <useNavigate to="/notification" style={{ color: '#FFFFFF' }}>
+            <FaBell size={24} />
+          </useNavigate>
+        </div>
           <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
             <img
               src="https://picsum.photos/200/300"
@@ -425,6 +440,15 @@ const HomePage = () => {
               }}>
                 <div onClick={handleEnableDevelopersMode} style={{ padding: '10px 20px', cursor: 'pointer' }}>
                   Enable developers mode
+                </div>
+                <div style={{ padding: '10px 20px', cursor: 'pointer' }}>
+                  Profile
+                </div>
+                <div style={{ padding: '10px 20px', cursor: 'pointer' }}>
+                  Help
+                </div>
+                <div style={{ padding: '10px 20px', cursor: 'pointer' }}>
+                  Feedback
                 </div>
                 <div onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer' }}>
                   Logout
