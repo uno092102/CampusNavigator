@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.campusnavigator.Entity.Feedback;
@@ -46,7 +45,7 @@ public class FeedbackController {
 
     // UPDATE
     @PutMapping("/putFeedback")
-    public Feedback putFeedbackRecord(@RequestParam int feedbackID, @RequestBody Feedback newFeedback) {
+    public Feedback putFeedbackRecord(@PathVariable int feedbackID, @RequestBody Feedback newFeedback) {
         return fserv.putFeedback(feedbackID, newFeedback);
     }
 
