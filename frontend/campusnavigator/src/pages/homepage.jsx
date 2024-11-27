@@ -129,6 +129,12 @@ const HomePage = () => {
     setSelectedBuilding({ ...building, imageURL, pois: buildingPOIs });
   };
 
+  const handleNavigateToProfile = () => {
+    // Close the dropdown and navigate to UserProfilePage
+    setDropdownOpen(false);
+    navigate('/userprofile');
+  };
+
   const handleCloseCard = () => {
     setSelectedBuilding(null);
     setEditingPOI(null);
@@ -359,42 +365,72 @@ const HomePage = () => {
 
   return (
     <div style={{ position: 'relative', height: '100vh', width: '100%' }}>
-      <header style={{ position: 'relative', backgroundColor: '#7757FF', color: '#FFFFFF', padding: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', zIndex: 1000 }}>
+      <header
+        style={{
+          position: 'relative',
+          backgroundColor: '#7757FF',
+          color: '#FFFFFF',
+          padding: '20px 40px', // Updated padding for consistency
+          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+          zIndex: 1000,
+        }}
+      >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Logo and Search */}
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <img src="/logoimg/Logodark.svg" alt="Logo" style={{ width: '60%', marginRight: '20px' }} />
-            <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '300px' }} ref={searchRef}>
-              <FaSearch style={{ position: 'absolute', top: '50%', left: '10px', transform: 'translateY(-50%)', color: '#7757FF' }} />
+            {/* Logo */}
+            <img src="/logoimg/Logodark.svg" alt="Logo" style={{ width: '240px', marginRight: '20px' }} />
+            {/* Increased logo size to match UserProfilePage */}
+            {/* Search Form */}
+            <form onSubmit={handleSearchSubmit} style={{ position: 'relative' }} ref={searchRef}>
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: '10px 10px 10px 40px',
+                  width: '300px',
+                  padding: '8px 12px 8px 40px',
                   borderRadius: '20px',
-                  border: '1px solid #FFFFFF',
+                  border: 'none',
                   backgroundColor: '#FFFFFF',
-                  color: '#7757FF'
+                  color: '#7757FF',
+                  fontSize: '16px',
                 }}
               />
-              {searchResults.length > 0 && (
-                <div style={{
+              <FaSearch
+                style={{
                   position: 'absolute',
-                  top: '40px',
-                  left: '0',
-                  right: '0',
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                  maxHeight: '200px',
-                  overflowY: 'auto',
-                  zIndex: 1001
-                }}>
-                  {searchResults.map(b => (
-                    <div key={b.buildingID} style={{ padding: '10px', borderBottom: '1px solid #ddd', cursor: 'pointer' }} onClick={() => handleMarkerClick(b)}>
-                      <strong style={{ color: '#7757FF' }}>{b.name}</strong><br />
+                  top: '50%',
+                  left: '12px',
+                  transform: 'translateY(-50%)',
+                  color: '#7757FF',
+                }}
+              />
+              {/* Search results dropdown */}
+              {searchResults.length > 0 && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '40px',
+                    left: '0',
+                    right: '0',
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    zIndex: 1001,
+                  }}
+                >
+                  {searchResults.map((b) => (
+                    <div
+                      key={b.buildingID}
+                      style={{ padding: '10px', borderBottom: '1px solid #ddd', cursor: 'pointer' }}
+                      onClick={() => handleMarkerClick(b)}
+                    >
+                      <strong style={{ color: '#7757FF' }}>{b.name}</strong>
+                      <br />
                       <span>{b.description}</span>
                     </div>
                   ))}
@@ -402,59 +438,79 @@ const HomePage = () => {
               )}
             </form>
           </div>
-          <div>
-          <a href="event" style={{ color: '#FFFFFF', width: '20px', marginRight: '10', textDecoration: 'none', fontSize: '18px' }}>Calendar</a>
-        </div>
-        <div>
-          <a href="event" style={{ color: '#FFFFFF', width: '20px', marginRight: '10', textDecoration: 'none', fontSize: '18px' }}>Campus Service</a>
-        </div>
-        <div>
-          <a href="event" style={{ color: '#FFFFFF', width: '20px', marginRight: '10', textDecoration: 'none', fontSize: '18px' }}>Announcement</a>
-        </div>
-        <div style={{ marginRight: '10px', cursor: 'pointer' }}>
-          <useNavigate to="/notification" style={{ color: '#FFFFFF' }}>
-            <FaBell size={24} />
-          </useNavigate>
-        </div>
-          <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
-            <img
-              src="https://picsum.photos/200/300"
-              alt="User Profile"
-              style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px', cursor: 'pointer' }}
-              onClick={() => {
-                setDropdownOpen(!dropdownOpen);
-              }}
-            />
-            <span style={{ marginRight: '10px' }}>{user ? user.name : ''}</span>
-            {dropdownOpen && (
-              <div style={{
-                position: 'absolute',
-                top: '60px',
-                right: '0',
-                backgroundColor: '#FFFFFF',
-                color: '#7757FF',
-                borderRadius: '8px',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                overflow: 'hidden',
-                zIndex: 1001
-              }}>
-                <div onClick={handleEnableDevelopersMode} style={{ padding: '10px 20px', cursor: 'pointer' }}>
-                  Enable developers mode
+          {/* Navigation Links and User Profile */}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {/* Navigation Links */}
+            <a
+              href="/event"
+              style={{ color: '#FFFFFF', marginRight: '30px', textDecoration: 'none', fontSize: '16px' }}
+            >
+              Calendar
+            </a>
+            <a
+              href="#"
+              style={{ color: '#FFFFFF', marginRight: '30px', textDecoration: 'none', fontSize: '16px' }}
+            >
+              Campus Service
+            </a>
+            <a
+              href="#"
+              style={{ color: '#FFFFFF', marginRight: '30px', textDecoration: 'none', fontSize: '16px' }}
+            >
+              Announcement
+            </a>
+            {/* Notifications */}
+            <div style={{ marginRight: '20px', cursor: 'pointer' }}>
+              <a href="/notification" style={{ color: '#FFFFFF' }}>
+                <FaBell size={24} />
+              </a>
+            </div>
+            {/* User Profile Dropdown */}
+            <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+              <img
+                src="https://picsum.photos/200/300"
+                alt="User Profile"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  marginRight: '10px',
+                  cursor: 'pointer',
+                }}
+                onClick={() => {
+                  setDropdownOpen(!dropdownOpen);
+                }}
+              />
+              <span style={{ marginRight: '10px' }}>{user ? user.name : ''}</span>
+              {dropdownOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '60px',
+                    right: '0',
+                    backgroundColor: '#FFFFFF',
+                    color: '#7757FF',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                    overflow: 'hidden',
+                    zIndex: 1001,
+                    minWidth: '200px',
+                  }}
+                >
+                  <div onClick={handleEnableDevelopersMode} style={{ padding: '10px 20px', cursor: 'pointer' }}>
+                    Enable Developers Mode
+                  </div>
+                  <div onClick={handleNavigateToProfile} style={{ padding: '10px 20px', cursor: 'pointer' }}>
+                    Profile
+                  </div>
+                  <div style={{ padding: '10px 20px', cursor: 'pointer' }}>Help</div>
+                  <div style={{ padding: '10px 20px', cursor: 'pointer' }}>Feedback</div>
+                  <div onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer' }}>
+                    Logout
+                  </div>
                 </div>
-                <div style={{ padding: '10px 20px', cursor: 'pointer' }}>
-                  Profile
-                </div>
-                <div style={{ padding: '10px 20px', cursor: 'pointer' }}>
-                  Help
-                </div>
-                <div style={{ padding: '10px 20px', cursor: 'pointer' }}>
-                  Feedback
-                </div>
-                <div onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer' }}>
-                  Logout
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </header>
