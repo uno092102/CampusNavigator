@@ -1,6 +1,6 @@
 // UserProfilePage.jsx
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaBell } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,6 +19,10 @@ function UserProfilePage() {
     email: 'johndoe@example.com',
     profilePicture: 'https://picsum.photos/200/300', // Placeholder image
   };
+
+  useEffect(() => {
+    document.title = "User Profile - CampusNavigator";
+  }, []);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
