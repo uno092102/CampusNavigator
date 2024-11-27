@@ -4,6 +4,7 @@ import Signup from './pages/signup';
 import Homepage from './pages/homepage';
 import Login from './pages/login';
 import Events from './pages/events';
+import Feedback from './pages/feedback';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
       <Route path="/signup" element={<Signup />} />
       <Route path="/login" element={<Login />} />
       <Route path="/homepage" element={<Homepage />} />
+      <Route path="/feedback" element={<Feedback />} />
       
     </Routes>
   );

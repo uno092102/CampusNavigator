@@ -1,0 +1,53 @@
+/* feedback-form.css */
+
+.feedback-form-container {
+    margin-top: 40px;
+    padding: 40px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+  }
+  
+  .form-title {
+    color: #1976d2;
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 30px;
+  }
+  
+  .input-field {
+    border-radius: 8px;
+    background-color: #ffffff;
+  }
+  
+  .submit-button {
+    margin-top: 20px;
+    padding: 14px;
+    text-transform: none;
+    font-size: 16px;
+    background-color: #1976d2;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .submit-button:hover {
+    background-color: #1565c0;
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  input[type="datetime-local"] {
+    background-color: #ffffff;
+    border-radius: 8px;
+  }
+  
+  /* Grid and spacing customization */
+  .MuiGrid-root {
+    margin-bottom: 15px;
+  }
+  
+  /* Optional: Styling the button hover effect for better focus */
+  .MuiButtonBase-root.MuiButton-root:hover {
+    background-color: #1565c0;
+  }
+  

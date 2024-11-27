@@ -348,6 +348,11 @@ const HomePage = () => {
     .catch(error => console.error('Error editing POI:', error));
   };
 
+  
+    const handleFeedbackPage = () => {
+      navigate("/feedback"); 
+    };
+
   const handleUpdateGeolocationClick = () => {
     setUpdatingGeolocation(true);
   };
@@ -447,7 +452,7 @@ const HomePage = () => {
                 <div style={{ padding: '10px 20px', cursor: 'pointer' }}>
                   Help
                 </div>
-                <div style={{ padding: '10px 20px', cursor: 'pointer' }}>
+                <div onClick={handleFeedbackPage}style={{ padding: '10px 20px', cursor: 'pointer' }}>
                   Feedback
                 </div>
                 <div onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer' }}>
