@@ -13,26 +13,27 @@ import com.campusnavigator.Repository.FeedbackRepository;
 
 @Service
 public class FeedbackService {
-
     @Autowired
-    private FeedbackRepository frepo;
+    FeedbackRepository frepo;
 
     public FeedbackService()
     {
         super();
     }
 
-    // Create 
-    public Feedback postFeedback(Feedback feedback) {
+    //CREATE
+    public Feedback postFeedback(Feedback feedback)
+    {
         return frepo.save(feedback);
     }
 
-    // Read all 
-    public List<Feedback> getAllFeedback() {
+    //READ
+    public List<Feedback>getAllFeedback()
+    {
         return frepo.findAll();
     }
 
-    // Update 
+    //UPDATE
     @SuppressWarnings("finally")
     public Feedback putFeedback(int feedbackID, Feedback newFeedback)
     {
@@ -41,20 +42,31 @@ public class FeedbackService {
         try {
             feed = frepo.findById(feedbackID).get();
 
-            feed.setComment(newFeedback.getComment());
-            feed.setRating(newFeedback.getRating());
+            feed.setMessage(newFeedback.getMessage());
+            
         } catch (NoSuchElementException nex) {
-            throw new NameNotFoundException("Feedback ID: " + feedbackID + " not found");
-            // TODO: handle exception
+            throw new NameNotFoundException("Feedback ID: " + feedbackID + " not found!");
         }finally
         {
             return frepo.save(feed);
         }
     }
 
-    // Delete 
-    public String deleteFeedback(int feedbackID) {
-        frepo.deleteById(feedbackID);
-        return"Feedback Deleted Successfuly";
+    //DELETE
+    @SuppressWarnings("unused")
+    public String deleteFeedback(int feedbackID)
+    {
+        String msg = "";
+        if(frepo.findById(feedbackID) != null)
+        {
+            frepo.deleteById(feedbackID);
+            msg = "Feedback Successfully delete!";
+        }
+        else
+        {
+            msg = feedbackID + " not found!";
+        }
+
+        return msg;
     }
 }

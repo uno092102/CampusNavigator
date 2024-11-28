@@ -4,8 +4,8 @@ import Signup from './pages/signup';
 import Homepage from './pages/homepage';
 import Login from './pages/login';
 import Events from './pages/events';
+import Feedback from './pages/Feedback';
 import Userprofile from './pages/UserProfilePage';
-
 function App() {
   return (
     <Routes>
@@ -15,7 +15,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/homepage" element={<Homepage />} />
       <Route path="/userprofile" element={<Userprofile />} />
-
+      <Route path="/Feedback" element={<Feedback />} />
       
     </Routes>
   );

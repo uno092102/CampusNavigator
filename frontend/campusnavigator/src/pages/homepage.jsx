@@ -181,6 +181,10 @@ const HomePage = () => {
     return () => { document.removeEventListener('mousedown', handleClickOutside); };
   }, []);
 
+  const handleFeedback = () => {
+    navigate('/Feedback');
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('user');
     navigate('/login');
@@ -504,7 +508,7 @@ const HomePage = () => {
                     Profile
                   </div>
                   <div style={{ padding: '10px 20px', cursor: 'pointer' }}>Help</div>
-                  <div style={{ padding: '10px 20px', cursor: 'pointer' }}>Feedback</div>
+                  <div onClick={handleFeedback} style={{ padding: '10px 20px', cursor: 'pointer' }}>Feedback</div>
                   <div onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer' }}>
                     Logout
                   </div>
