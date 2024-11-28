@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaBell } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function UserProfilePage() {
   const [searchText, setSearchText] = useState('');
@@ -87,7 +87,13 @@ function UserProfilePage() {
           {/* Logo and Search */}
           <div style={{ display: 'flex', alignItems: 'center' }}>
             {/* Logo */}
-            <img src="/logoimg/Logodark.svg" alt="Logo" style={{ width: '240px', marginRight: '20px' }} />
+            <Link to="/homepage">
+              <img
+                src="/logoimg/Logodark.svg"
+                alt="Logo"
+                style={{ width: '240px', marginRight: '20px' }}
+              />
+            </Link>
             {/* Increased logo size by 60% */}
             {/* Search Form */}
             <form onSubmit={handleSearchSubmit} style={{ position: 'relative' }} ref={searchRef}>
