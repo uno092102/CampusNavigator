@@ -54,19 +54,28 @@ const Signup = () => {
 
       const geolocationData = {
         latitude: 10.294337,
-        longitude: -236.118532,
-        timeStamp: new Date().toISOString(),
-        userID: createdUser.userID,
+        longitude: -236.118532, // Out-of-range value
+        timestamp: new Date().toISOString(),
+        user: {
+          userID: createdUser.userID,
+        },
       };
-
-      const geoResponse = await fetch("http://localhost:8080/api/geolocation/postGeolocation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(geolocationData),
-      });
-
-      if (!geoResponse.ok) {
-        throw new Error(`HTTP error! status: ${geoResponse.status}`);
+      
+      try {
+        const geoResponse = await fetch("http://localhost:8080/api/geolocation/postGeolocation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(geolocationData), // Send the payload as-is
+        });
+      
+        if (!geoResponse.ok) {
+          throw new Error(`HTTP error! status: ${geoResponse.status}`);
+        }
+      
+        const responseData = await geoResponse.json();
+        console.log("Geolocation saved successfully:", responseData);
+      } catch (error) {
+        console.error("Failed to save geolocation:", error);
       }
 
       navigate('/login');

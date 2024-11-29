@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaPlus } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvent } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -86,34 +86,49 @@ const HomePage = () => {
 
   useEffect(() => {
     if (user) {
-      fetch('http://localhost:8080/api/geolocation/getAllGeolocation')
-        .then(response => response.json())
-        .then(data => {
-          const userGeo = data.find(g => g.userID === user.userID);
-          if (userGeo) {
-            setUserLocation({ latitude: userGeo.latitude, longitude: userGeo.longitude });
-            setUserGeolocationId(userGeo.geolocationID);
-          } else {
+      // Fetch geolocation data for the current user
+      fetch(`http://localhost:8080/api/geolocation/getGeolocationByUser/${user.userID}`)
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          } else if (response.status === 404) {
+            // No geolocation data exists for this user; create a new entry
             const newGeoData = {
               latitude: 0,
               longitude: 0,
-              timeStamp: new Date().toISOString(),
-              userID: user.userID
+              timestamp: new Date().toISOString(),
+              userID: user.userID,
             };
-            fetch('http://localhost:8080/api/geolocation/postGeolocation', {
+  
+            return fetch('http://localhost:8080/api/geolocation/postGeolocation', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(newGeoData)
+              body: JSON.stringify(newGeoData),
             })
-            .then(response => response.json())
-            .then(newGeo => {
-              setUserLocation({ latitude: newGeo.latitude, longitude: newGeo.longitude });
-              setUserGeolocationId(newGeo.geolocationID);
-            })
-            .catch(error => console.error('Error creating user geolocation:', error));
+              .then(postResponse => postResponse.json())
+              .then(newGeo => {
+                setUserLocation({
+                  latitude: newGeo.latitude,
+                  longitude: newGeo.longitude,
+                });
+                setUserGeolocationId(newGeo.geolocationID);
+              });
+          } else {
+            throw new Error('Network response was not ok');
           }
         })
-        .catch(error => console.error('Error fetching user geolocation:', error));
+        .then(data => {
+          if (data) {
+            setUserLocation({
+              latitude: data.latitude,
+              longitude: data.longitude,
+            });
+            setUserGeolocationId(data.geolocationID);
+          }
+        })
+        .catch(error =>
+          console.error('Error fetching or creating user geolocation:', error)
+        );
     }
   }, [user]);
 
@@ -181,6 +196,10 @@ const HomePage = () => {
     return () => { document.removeEventListener('mousedown', handleClickOutside); };
   }, []);
 
+  const handleFeedback = () => {
+    navigate('/Feedback');
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('user');
     navigate('/login');
@@ -203,19 +222,19 @@ const HomePage = () => {
       const data = {
         latitude: e.latlng.lat,
         longitude: e.latlng.lng,
-        timeStamp: new Date().toISOString(),
-        userID: user.userID
+        timestamp: new Date().toISOString(), // Corrected property name
+        userID: user.userID,
       };
       fetch(`http://localhost:8080/api/geolocation/putGeolocation/${userGeolocationId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
       })
-      .then(() => {
-        setUserLocation({ latitude: data.latitude, longitude: data.longitude });
-        setUpdatingGeolocation(false);
-      })
-      .catch(error => console.error('Error updating geolocation:', error));
+        .then(() => {
+          setUserLocation({ latitude: data.latitude, longitude: data.longitude });
+          setUpdatingGeolocation(false);
+        })
+        .catch((error) => console.error('Error updating geolocation:', error));
     }
   };
 
@@ -379,7 +398,13 @@ const HomePage = () => {
           {/* Logo and Search */}
           <div style={{ display: 'flex', alignItems: 'center' }}>
             {/* Logo */}
-            <img src="/logoimg/Logodark.svg" alt="Logo" style={{ width: '240px', marginRight: '20px' }} />
+            <Link to="/homepage">
+              <img
+                src="/logoimg/Logodark.svg"
+                alt="Logo"
+                style={{ width: '240px', marginRight: '20px' }}
+              />
+            </Link>
             {/* Increased logo size to match UserProfilePage */}
             {/* Search Form */}
             <form onSubmit={handleSearchSubmit} style={{ position: 'relative' }} ref={searchRef}>
@@ -504,7 +529,7 @@ const HomePage = () => {
                     Profile
                   </div>
                   <div style={{ padding: '10px 20px', cursor: 'pointer' }}>Help</div>
-                  <div style={{ padding: '10px 20px', cursor: 'pointer' }}>Feedback</div>
+                  <div onClick={handleFeedback} style={{ padding: '10px 20px', cursor: 'pointer' }}>Feedback</div>
                   <div onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer' }}>
                     Logout
                   </div>
