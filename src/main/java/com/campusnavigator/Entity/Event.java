@@ -32,7 +32,16 @@ public class Event {
 
     private String organizer;
 
-    // Using ElementCollection for simple participant management
+    @ManyToOne
+    @JoinColumn(name = "building_id")
+    private Building building;
+
+    // Relationship with PointOfInterest
+    @ManyToOne
+    @JoinColumn(name = "poi_id")
+    private PointOfInterest pointOfInterest;
+
+    // ElementCollection for participants
     @ElementCollection
     private List<String> participants;
 
@@ -42,8 +51,28 @@ public class Event {
         PointOfInterest
     }
 
+
+
+
     // Constructors
     public Event() {}
+
+       // Add getters and setters for building and pointOfInterest
+       public Building getBuilding() {
+        return building;
+    }
+
+    public void setBuilding(Building building) {
+        this.building = building;
+    }
+
+    public PointOfInterest getPointOfInterest() {
+        return pointOfInterest;
+    }
+
+    public void setPointOfInterest(PointOfInterest pointOfInterest) {
+        this.pointOfInterest = pointOfInterest;
+    }
 
     // Getters and Setters (omitted for brevity, but should be fully implemented)
     public Long getEventID() { return eventID; }

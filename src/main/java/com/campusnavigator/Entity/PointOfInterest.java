@@ -1,8 +1,13 @@
 package com.campusnavigator.Entity;
 
+import java.util.ArrayList;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
+
+import java.util.List;
 
 @Entity
 public class PointOfInterest {
@@ -13,7 +18,14 @@ public class PointOfInterest {
     @ManyToOne
     @JoinColumn(name = "building_id", nullable = false)
     @JsonBackReference
+
+
     private Building building;
+
+      @OneToMany(mappedBy = "pointOfInterest", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Event> events = new ArrayList<>();
+    
 
     private String name;
 
@@ -35,6 +47,16 @@ public class PointOfInterest {
 
     public void setBuilding(Building building) {
         this.building = building;
+    }
+
+    // New getter for events
+    public List<Event> getEvents() {
+        return events;
+    }
+
+    // New setter for events
+    public void setEvents(List<Event> events) {
+        this.events = events;
     }
 
     public String getName() {

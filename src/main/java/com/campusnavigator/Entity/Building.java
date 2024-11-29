@@ -3,6 +3,7 @@ package com.campusnavigator.Entity;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.util.Set;
+import java.util.List;
 
 @Entity
 public class Building {
@@ -24,6 +25,10 @@ public class Building {
 
     @OneToOne(mappedBy = "building", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
+
+    @OneToMany(mappedBy = "building", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Event> events;
+
     private MapData mapData;
 
     public Long getBuildingID() {
@@ -80,5 +85,13 @@ public class Building {
 
     public void setMapData(MapData mapData) {
         this.mapData = mapData;
+    }
+
+    public List<Event> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<Event> events) {
+        this.events = events;
     }
 }
