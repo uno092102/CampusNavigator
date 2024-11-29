@@ -159,17 +159,46 @@ const HomePage = () => {
     e.preventDefault();
     const text = searchText.trim().toLowerCase();
     if (!text) return;
-    const matchedBuildings = buildings.filter(b =>
-      (b.name && b.name.toLowerCase().includes(text)) ||
-      (b.description && b.description.toLowerCase().includes(text)) ||
-      (b.pointsOfInterest && b.pointsOfInterest.some(p =>
+  
+    let matchedResults = [];
+  
+    buildings.forEach(b => {
+      const buildingMatches =
+        (b.name && b.name.toLowerCase().includes(text)) ||
+        (b.description && b.description.toLowerCase().includes(text));
+  
+      if (buildingMatches) {
+        matchedResults.push({ type: 'building', building: b });
+      }
+  
+      const matchingPOIs = b.pointsOfInterest ? b.pointsOfInterest.filter(p =>
         (p.name && p.name.toLowerCase().includes(text)) ||
         (p.description && p.description.toLowerCase().includes(text))
-      ))
-    );
-    setSearchResults(matchedBuildings);
+      ) : [];
+  
+      matchingPOIs.forEach(poi => {
+        matchedResults.push({ type: 'poi', building: b, poi });
+      });
+    });
+  
+    setSearchResults(matchedResults);
     setSelectedBuilding(null);
     postSearchRecord(text);
+  };
+
+  // Define handleResultClick function
+  const handleResultClick = (item) => {
+    // Find the full building data using buildingID
+    const fullBuildingData = buildings.find(b => b.buildingID === item.building.buildingID);
+    
+    if (fullBuildingData) {
+      setSelectedBuilding(fullBuildingData);
+    } else {
+      console.warn('Building data not found for buildingID:', item.building.buildingID);
+      setSelectedBuilding(item.building); // Use item.building as a fallback
+    }
+    
+    setSearchResults([]);
   };
 
   const postSearchRecord = (text) => {
@@ -439,24 +468,36 @@ const HomePage = () => {
                     position: 'absolute',
                     top: '40px',
                     left: '0',
-                    right: '0',
                     backgroundColor: '#FFFFFF',
                     borderRadius: '8px',
                     boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                    maxHeight: '200px',
-                    overflowY: 'auto',
                     zIndex: 1001,
+                    width: '300px',
+                    minWidth: '350px',
+                    maxWidth: '90vw',
+                    maxHeight: '80vh',
+                    overflowY: 'auto',
                   }}
                 >
-                  {searchResults.map((b) => (
+                  {searchResults.map((item, index) => (
                     <div
-                      key={b.buildingID}
-                      style={{ padding: '10px', borderBottom: '1px solid #ddd', cursor: 'pointer' }}
-                      onClick={() => handleMarkerClick(b)}
+                      key={index}
+                      style={{
+                        padding: '10px',
+                        borderBottom: '1px solid #ddd',
+                        cursor: 'pointer',
+                        whiteSpace: 'normal',
+                        wordWrap: 'break-word',
+                      }}
+                      onClick={() => handleResultClick(item)}
                     >
-                      <strong style={{ color: '#7757FF' }}>{b.name}</strong>
+                      <strong style={{ color: '#7757FF' }}>
+                        {item.type === 'building' ? item.building.name : item.poi.name}
+                      </strong>
                       <br />
-                      <span>{b.description}</span>
+                      <span>
+                        {item.type === 'building' ? item.building.description : item.poi.description}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -486,7 +527,7 @@ const HomePage = () => {
             </a>
             {/* Notifications */}
             <div style={{ marginRight: '20px', cursor: 'pointer' }}>
-              <a href="/notification" style={{ color: '#FFFFFF' }}>
+              <a href="#" style={{ color: '#FFFFFF' }}>
                 <FaBell size={24} />
               </a>
             </div>
@@ -600,17 +641,21 @@ const HomePage = () => {
             cursor: 'pointer'
           }}>×</button>
           <h2 style={{ color: '#7757FF' }}>{selectedBuilding.name}</h2>
-          {selectedBuilding.imageURL ? (
-            <img src={selectedBuilding.imageURL} alt={selectedBuilding.name} style={{ width: '100%', borderRadius: '4px' }} />
+          {selectedBuilding.mapData && selectedBuilding.mapData.mapImageURL ? (
+            <img
+              src={selectedBuilding.mapData.mapImageURL}
+              alt={selectedBuilding.name}
+              style={{ width: '100%', borderRadius: '4px' }}
+            />
           ) : (
             <p>No image available</p>
           )}
           <p>{selectedBuilding.description}</p>
-          {selectedBuilding.pois && selectedBuilding.pois.length > 0 ? (
+          {selectedBuilding.pointsOfInterest && selectedBuilding.pointsOfInterest.length > 0 ? (
             <div>
               <h3 style={{ color: '#7757FF' }}>Points of Interest</h3>
               <ul style={{ listStyleType: 'none', padding: 0 }}>
-                {selectedBuilding.pois.map(poi => (
+                {selectedBuilding.pointsOfInterest.map(poi => (
                   <li key={poi.poi_ID} style={{ marginBottom: '10px', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
                     <strong style={{ color: '#7757FF' }}>{poi.name}</strong><br />
                     <span>{poi.description}</span><br />

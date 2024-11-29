@@ -24,6 +24,10 @@ function UserProfilePage() {
     document.title = "User Profile - CampusNavigator";
   }, []);
 
+  const handleFeedback = () => {
+    navigate('/Feedback');
+  };
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     // Placeholder search functionality
@@ -35,12 +39,7 @@ function UserProfilePage() {
     // For now, just navigate to login page
     navigate('/login');
   };
-
-  const handleEnableDevelopersMode = () => {
-    // Placeholder for enabling developer's mode
-    alert('Developers mode enabled');
-  };
-
+  
   const handleNavigateToProfile = () => {
     // Close the dropdown and navigate to UserProfilePage
     setDropdownOpen(false);
@@ -145,7 +144,7 @@ function UserProfilePage() {
             </a>
             {/* Notifications */}
             <div style={{ marginRight: '20px', cursor: 'pointer' }}>
-              <a href="/notification" style={{ color: '#FFFFFF' }}>
+              <a href="#" style={{ color: '#FFFFFF' }}>
                 <FaBell size={24} />
               </a>
             </div>
@@ -181,14 +180,11 @@ function UserProfilePage() {
                     minWidth: '200px',
                   }}
                 >
-                  <div onClick={handleEnableDevelopersMode} style={{ padding: '10px 20px', cursor: 'pointer' }}>
-                    Enable Developers Mode
-                  </div>
                   <div onClick={handleNavigateToProfile} style={{ padding: '10px 20px', cursor: 'pointer' }}>
                     Profile
                   </div>
                   <div style={{ padding: '10px 20px', cursor: 'pointer' }}>Help</div>
-                  <div style={{ padding: '10px 20px', cursor: 'pointer' }}>Feedback</div>
+                  <div onClick={handleFeedback} style={{ padding: '10px 20px', cursor: 'pointer' }}>Feedback</div>
                   <div onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer' }}>
                     Logout
                   </div>
