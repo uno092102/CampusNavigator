@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './signup.css';
-import './login.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import "./signup.css";
+import "./login.css";
 
 const backgroundImages = [
   "/backgroundimg/Accreditation-Room.jpg",
@@ -16,15 +16,15 @@ const backgroundImages = [
   "/backgroundimg/Matisse-Room.jpg",
   "/backgroundimg/SAL-Building.jpg",
   "/backgroundimg/Smart-Classroom.jpg",
-  "/backgroundimg/Wildcat-Innovation-Labs-01.jpg"
+  "/backgroundimg/Wildcat-Innovation-Labs-01.jpg",
 ];
 
 const Login = () => {
   const navigate = useNavigate();
   const [currentImage, setCurrentImage] = useState(backgroundImages[0]);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     document.title = "Login - CampusNavigator";
@@ -39,16 +39,20 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:8080/api/user/getAllSearch");
+      const response = await fetch(
+        "http://localhost:8080/api/user/getAllSearch"
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const users = await response.json();
-      const user = users.find(user => user.email === email && user.password === password);
+      const user = users.find(
+        (user) => user.email === email && user.password === password
+      );
 
       if (user) {
-        localStorage.setItem('user', JSON.stringify(user));
-        navigate('/homepage');
+        localStorage.setItem("user", JSON.stringify(user));
+        navigate("/homepage");
       } else {
         setErrorMessage("Invalid email or password. Please try again.");
       }
@@ -59,7 +63,7 @@ const Login = () => {
   };
 
   const handleSignup = () => {
-    navigate('/signup');
+    navigate("/signup");
   };
 
   return (
@@ -71,25 +75,28 @@ const Login = () => {
         <img src="/logoimg/Logolight.svg" alt="Logo" className="logo" />
         <form className="signup-form" onSubmit={handleSubmit}>
           <h2>Login</h2>
-          <input 
-            type="email" 
-            placeholder="Email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            required 
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
           />
-          <input 
-            type="password" 
-            placeholder="Password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            required 
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
           />
           {errorMessage && <p className="error-message">{errorMessage}</p>}
           <button type="submit">Login</button>
         </form>
         <p>
-          Don't have an account? <button className="link-button" onClick={handleSignup}>Sign Up</button>
+          Don't have an account?{" "}
+          <button className="link-button" onClick={handleSignup}>
+            Sign Up
+          </button>
         </p>
       </div>
     </div>

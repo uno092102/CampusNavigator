@@ -1,258 +1,276 @@
-import React, { useState, useEffect } from "react";
-import Calendar from "react-calendar";
-import axios from "axios";
-import "react-calendar/dist/Calendar.css";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import './events.css';
 
-const Events = () => {
-  const [events, setEvents] = useState([]); // All events
-  const [selectedDate, setSelectedDate] = useState(new Date()); // Currently selected date
-  const [selectedEvent, setSelectedEvent] = useState(null); // Event on selected date
-  const [formData, setFormData] = useState({
-    name: "",
-    location: "",
-    description: "",
-    date_time: "",
-  });
+const BASE_URL = 'http://localhost:8080/api/event';
+const localizer = momentLocalizer(moment);
 
-  const [showForm, setShowForm] = useState(false);
+const Event = () => {
+    const [events, setEvents] = useState([]);
+    const [currentEvent, setCurrentEvent] = useState({
+        name: '',
+        description: '',
+        locationID: 0,
+        locationType: 'Building',
+        startTime: null,
+        endTime: null,
+        organizer: null,
+        participants: []
+    });
+    const [error, setError] = useState('');
 
-  // Fetch all events when the component loads
-  useEffect(() => {
-    fetchAllEvents();
-  }, []);
+    // Fetch events on component mount
+    useEffect(() => {
+        fetchEvents();
+    }, []);
 
-  const fetchAllEvents = async () => {
-    try {
-      const response = await axios.get("http://localhost:8080/api/events");
-      setEvents(response.data);
-    } catch (error) {
-      console.error("Error fetching events:", error);
-    }
-  };
+    const fetchEvents = async () => {
+        try {
+            const response = await axios.get(`${BASE_URL}/getAllEvents`);
+            const formattedEvents = response.data.map(event => ({
+                ...event,
+                start: new Date(event.startTime),
+                end: new Date(event.endTime),
+                title: event.name
+            }));
+            setEvents(formattedEvents);
+        } catch (error) {
+            console.error('Error fetching events:', error);
+        }
+    };
 
-  const fetchEventByDate = async (date) => {
-    try {
-      const formattedDate = date.toISOString().split("T")[0]; // "yyyy-MM-dd"
-      const response = await axios.get(
-        `http://localhost:8080/api/events?date=${formattedDate}`
-      );
-      const event = response.data;
-
-      if (event) {
-        setSelectedEvent(event);
-        setFormData({
-          name: event.name,
-          location: event.location,
-          description: event.description,
-          date_time: event.date_time.slice(0, 19), // Format to "yyyy-MM-ddTHH:mm:ss"
+    // Function to check for event conflicts
+    const checkEventConflicts = (newEvent) => {
+        return events.some(existingEvent => {
+            // Check if the new event overlaps with any existing event
+            return (
+                (newEvent.startTime >= existingEvent.start && newEvent.startTime < existingEvent.end) ||
+                (newEvent.endTime > existingEvent.start && newEvent.endTime <= existingEvent.end) ||
+                (newEvent.startTime <= existingEvent.start && newEvent.endTime >= existingEvent.end)
+            );
         });
-        setShowForm(false);
-      } else {
-        setSelectedEvent(null);
-        setShowForm(true);
-        setFormData({
-          name: "",
-          location: "",
-          description: "",
-          date_time: formatDateForInput(date),
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setCurrentEvent(prev => ({
+            ...prev,
+            [name]: value
+        }));
+        // Clear any previous error when user modifies input
+        setError('');
+    };
+
+    const handleCreateEvent = async (e) => {
+        e.preventDefault();
+        
+        // Check for event conflicts before creating
+        if (checkEventConflicts(currentEvent)) {
+            setError("There is an event already scheduled during this time.");
+            return;
+        }
+
+        try {
+            await axios.post(`${BASE_URL}/createEvent`, currentEvent);
+            fetchEvents();
+            resetForm();
+        } catch (error) {
+            console.error('Error creating event:', error);
+        }
+    };
+
+    const handleUpdateEvent = async (e) => {
+        e.preventDefault();
+        if (currentEvent.eventID) {
+            // Filter out the current event from conflict check to allow updates
+            const conflictCheckEvents = events.filter(event => event.eventID !== currentEvent.eventID);
+            
+            // Temporarily replace events array for conflict checking
+            const tempEvents = [
+                ...conflictCheckEvents,
+                {
+                    ...currentEvent,
+                    start: currentEvent.startTime,
+                    end: currentEvent.endTime
+                }
+            ];
+
+            // Check for conflicts in a way that excludes the current event
+            const hasConflicts = tempEvents.some((existingEvent, index) => 
+                index < conflictCheckEvents.length && (
+                    (currentEvent.startTime >= existingEvent.start && currentEvent.startTime < existingEvent.end) ||
+                    (currentEvent.endTime > existingEvent.start && currentEvent.endTime <= existingEvent.end) ||
+                    (currentEvent.startTime <= existingEvent.start && currentEvent.endTime >= existingEvent.end)
+                )
+            );
+
+            if (hasConflicts) {
+                setError("There is an event already scheduled during this time.");
+                return;
+            }
+
+            try {
+                await axios.put(`${BASE_URL}/updateEvent/${currentEvent.eventID}`, currentEvent);
+                fetchEvents();
+                resetForm();
+            } catch (error) {
+                console.error('Error updating event:', error);
+            }
+        }
+    };
+
+    const handleSelectEvent = (event) => {
+        setCurrentEvent(event);
+        // Clear any previous error when selecting an event
+        setError('');
+    };
+
+    const handleDelete = async () => {
+        if (currentEvent.eventID) {
+            try {
+                await axios.delete(`${BASE_URL}/deleteEvent/${currentEvent.eventID}`);
+                fetchEvents();
+                resetForm();
+            } catch (error) {
+                console.error('Error deleting event:', error);
+            }
+        }
+    };
+
+    const resetForm = () => {
+        setCurrentEvent({
+            name: '',
+            description: '',
+            locationID: 0,
+            locationType: 'Building',
+            startTime: null,
+            endTime: null,
+            organizer: null,
+            participants: []
         });
-      }
-    } catch (error) {
-      console.error("Error fetching event by date:", error);
-    }
-  };
+        // Clear any error message when resetting form
+        setError('');
+    };
 
-  const formatDateForInput = (dateTime) => {
-    const date = new Date(dateTime);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}-${String(date.getDate()).padStart(2, "0")}T${String(
-      date.getHours()
-    ).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:${String(
-      date.getSeconds()
-    ).padStart(2, "0")}`;
-  };
-
-  const isValidDateTime = (dateTime) => {
-    const regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
-    return regex.test(dateTime);
-  };
-
-  const formatForBackend = (dateTime) => {
-    const date = new Date(dateTime.replace("T", " "));
-    return date.toISOString(); // Convert to ISO format for backend
-  };
-
-  const handleDateClick = (date) => {
-    setSelectedDate(date);
-    fetchEventByDate(date);
-  };
-
-  const handleDeleteEvent = async () => {
-    if (!selectedEvent) return;
-
-    try {
-      await axios.delete(`http://localhost:8080/api/events/${selectedEvent.id}`);   
-      alert("Event deleted successfully!");
-      setSelectedEvent(null);
-      fetchAllEvents();
-    } catch (error) {
-      console.error("Error deleting event:", error);
-      alert("Failed to delete event.");
-    }
-  };
-
-  const handleSaveEvent = async (e) => {
-    e.preventDefault();
-
-    if (!isValidDateTime(formData.date_time)) {
-      alert("Invalid date-time format! Please use 'YYYY-MM-DDTHH:mm:ss'.");
-      return;
-    }
-
-    try {
-      const payload = {
-        ...formData,
-        date_time: formatForBackend(formData.date_time),
-      };
-
-      if (selectedEvent) {
-        await axios.put(
-          `http://localhost:8080/api/events/${selectedEvent.id}`,
-          payload
-        );
-        alert("Event updated successfully!");
-      } else {
-        const response = await axios.post("http://localhost:8080/api/events", payload);
-        setEvents((prev) => [...prev, response.data]);
-        alert("Event created successfully!");
-      }
-
-      fetchAllEvents();
-      setSelectedEvent(null);
-      setShowForm(false);
-    } catch (error) {
-      console.error("Error saving event:", error);
-      alert("Failed to save event.");
-    }
-  };
-
-  return (
-    <div>
-      <h1>Events Calendar</h1>
-
-      <Calendar
-        onChange={handleDateClick}
-        value={selectedDate}
-        tileContent={({ date }) => {
-          const eventExists = events.some(
-            (event) =>
-              new Date(event.date_time).toDateString() === date.toDateString()
-          );
-          return eventExists ? <span>📅</span> : null;
-        }}
-      />
-
-      <button
-        onClick={() => {
-          setShowForm(true);
-          setSelectedEvent(null);
-          setFormData({
-            name: "",
-            location: "",
-            description: "",
-            date_time: formatDateForInput(new Date()),
-          });
-        }}
-      >
-        Create Event
-      </button>
-
-      {selectedEvent && (
-        <div>
-          <h2>Event Details</h2>
-          <p>
-            <strong>Name:</strong> {selectedEvent.name}
-          </p>
-          <p>
-            <strong>Location:</strong> {selectedEvent.location}
-          </p>
-          <p>
-            <strong>Description:</strong> {selectedEvent.description}
-          </p>
-          <p>
-            <strong>Date & Time:</strong>{" "}
-            {new Date(selectedEvent.date_time).toLocaleString()}
-          </p>
-          <button onClick={() => setShowForm(true)}>Edit Event</button>
-          <button onClick={handleDeleteEvent}>Delete Event</button>
+    return (
+        <div className="container">
+            <div className="row">
+                <div className="col-md-6">
+                    <h2>Event Calendar</h2>
+                    <Calendar
+                        localizer={localizer}
+                        events={events}
+                        startAccessor="start"
+                        endAccessor="end"
+                        style={{ height: 500 }}
+                        onSelectEvent={handleSelectEvent}
+                    />
+                </div>
+                <div className="col-md-6">
+                    <h2>{currentEvent.eventID ? 'Edit Event' : 'Create Event'}</h2>
+                    {error && (
+                        <div className="alert alert-danger" role="alert">
+                            {error}
+                        </div>
+                    )}
+                    <form onSubmit={currentEvent.eventID ? handleUpdateEvent : handleCreateEvent}>
+                        <div className="form-group">
+                            <label>Event Name</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                name="name"
+                                value={currentEvent.name}
+                                onChange={handleInputChange}
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Description</label>
+                            <textarea
+                                className="form-control"
+                                name="description"
+                                value={currentEvent.description}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Start Time</label>
+                            <input
+                                type="datetime-local"
+                                className="form-control"
+                                name="startTime"
+                                value={currentEvent.startTime ? moment(currentEvent.startTime).format('YYYY-MM-DDTHH:mm') : ''}
+                                onChange={(e) => {
+                                    setCurrentEvent(prev => ({
+                                        ...prev,
+                                        startTime: new Date(e.target.value)
+                                    }));
+                                    setError('');
+                                }}
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>End Time</label>
+                            <input
+                                type="datetime-local"
+                                className="form-control"
+                                name="endTime"
+                                value={currentEvent.endTime ? moment(currentEvent.endTime).format('YYYY-MM-DDTHH:mm') : ''}
+                                onChange={(e) => {
+                                    setCurrentEvent(prev => ({
+                                        ...prev,
+                                        endTime: new Date(e.target.value)
+                                    }));
+                                    setError('');
+                                }}
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Location Type</label>
+                            <select
+                                className="form-control"
+                                name="locationType"
+                                value={currentEvent.locationType}
+                                onChange={handleInputChange}
+                            >
+                                <option value="Building">Building</option>
+                                <option value="PointOfInterest">Point of Interest</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Location ID</label>
+                            <input
+                                type="number"
+                                className="form-control"
+                                name="locationID"
+                                value={currentEvent.locationID}
+                                onChange={handleInputChange}
+                                required
+                            />
+                        </div>
+                        <button type="submit" className="btn btn-primary">
+                            {currentEvent.eventID ? 'Update Event' : 'Create Event'}
+                        </button>
+                        {currentEvent.eventID && (
+                            <button 
+                                type="button" 
+                                className="btn btn-danger ml-2" 
+                                onClick={handleDelete}
+                            >
+                                Delete Event
+                            </button>
+                        )}
+                    </form>
+                </div>
+            </div>
         </div>
-      )}
-
-      {showForm && (
-        <div>
-          <h2>{selectedEvent ? "Edit Event" : "Create Event"}</h2>
-          <form onSubmit={handleSaveEvent}>
-            <label>
-              Name:
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                required
-              />
-            </label>
-            <br />
-            <label>
-              Location:
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={(e) =>
-                  setFormData({ ...formData, location: e.target.value })
-                }
-                required
-              />
-            </label>
-            <br />
-            <label>
-              Description:
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                required
-              ></textarea>
-            </label>
-            <br />
-            <label>
-              Date & Time:
-              <input
-                type="datetime-local"
-                name="date_time"
-                value={formData.date_time}
-                onChange={(e) =>
-                  setFormData({ ...formData, date_time: e.target.value })
-                }
-                required
-              />
-            </label>
-            <br />
-            <button type="submit">
-              {selectedEvent ? "Update Event" : "Create Event"}
-            </button>
-          </form>
-        </div>
-      )}
-    </div>
-  );
+    );
 };
 
-export default Events;
+export default Event;
