@@ -5,8 +5,11 @@ import org.springframework.stereotype.Repository;
 
 import com.campusnavigator.Entity.CampusService;
 
+import java.util.Optional;
+
 @Repository
 public interface CampusServiceRepository extends JpaRepository<CampusService, Integer> {
 
-    public CampusService findByServiceID(int serviceID);
+    // Use Optional for better null safety
+    Optional<CampusService> findByServiceID(int serviceID);
 }

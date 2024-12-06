@@ -4,115 +4,93 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class CampusService {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int serviceID;
 
     private String name;
     private String description;
-    private int locationID;
-    private String locationType;
-    private String operatingHours;
-    private String contactInfo;
-    private String serviceType;
-    private int managedBy;
 
-    public CampusService() {
-        super();
-    }
+    @ManyToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "userID")
+    private User user;
 
-    public CampusService(String name, String description, int locationID, String locationType, 
-                         String operatingHours, String contactInfo, String serviceType, int managedBy) {
-        super();
-        this.name = name;
-        this.description = description;
-        this.locationID = locationID;
-        this.locationType = locationType;
-        this.operatingHours = operatingHours;
-        this.contactInfo = contactInfo;
-        this.serviceType = serviceType;
-        this.managedBy = managedBy;
-    }
-
-    // Getters
+    // Getters and Setters
     public int getServiceID() {
         return serviceID;
+    }
+
+    public void setServiceID(int serviceID) {
+        this.serviceID = serviceID;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public int getLocationID() {
-        return locationID;
-    }
-
-    public String getLocationType() {
-        return locationType;
-    }
-
-    public String getOperatingHours() {
-        return operatingHours;
-    }
-
-    public String getContactInfo() {
-        return contactInfo;
-    }
-
-    public String getServiceType() {
-        return serviceType;
-    }
-
-    public int getManagedBy() {
-        return managedBy;
-    }
-
-    // Setters
-    public void setServiceID(int serviceID) {
-        this.serviceID = serviceID;
-    }
-
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public void setDescription(String description) {
         this.description = description;
     }
 
-    public void setLocationID(int locationID) {
-        this.locationID = locationID;
+    public User getUser() {
+        return user;
     }
 
-    public void setLocationType(String locationType) {
-        this.locationType = locationType;
+    public void setUser(User user) {
+        this.user = user;
     }
 
-    public void setOperatingHours(String operatingHours) {
-        this.operatingHours = operatingHours;
-    }
-
-    public void setContactInfo(String contactInfo) {
-        this.contactInfo = contactInfo;
-    }
-
-    public void setServiceType(String serviceType) {
-        this.serviceType = serviceType;
-    }
-
-    public void setManagedBy(int managedBy) {
-        this.managedBy = managedBy;
-    }
-
-    public CampusService get() {
+    public Object getLocationID() {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'get'");
+        throw new UnsupportedOperationException("Unimplemented method 'getLocationID'");
+    }
+
+    public void setLocationID(Object locationID) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setLocationID'");
+    }
+
+    public Object getOperatingHours() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getOperatingHours'");
+    }
+
+    public void setOperatingHours(Object operatingHours) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setOperatingHours'");
+    }
+
+    public Object getContactInfo() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getContactInfo'");
+    }
+
+    public void setContactInfo(Object contactInfo) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setContactInfo'");
+    }
+
+    public Object getManagedBy() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getManagedBy'");
+    }
+
+    public void setManagedBy(Object managedBy) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setManagedBy'");
     }
 }

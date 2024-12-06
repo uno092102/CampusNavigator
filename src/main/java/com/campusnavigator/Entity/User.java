@@ -3,8 +3,6 @@ package com.campusnavigator.Entity;
 import jakarta.persistence.*;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
 @Entity
 public class User {
 
@@ -13,29 +11,13 @@ public class User {
     private int userID;
 
     private String name;
-    private String role;
     private String email;
-    private String password;
+    private String password; // Ensure this field exists
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true) // Relationship mapping
-    @JsonManagedReference
-    private List<GeolocationData> geolocationData; // A user can have multiple geolocation entries
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<CampusService> campusServices;
 
-    // Default constructor
-    public User() {
-        super();
-    }
-
-    // Parameterized constructor
-    public User(int userID, String name, String role, String email, String password) {
-        this.userID = userID;
-        this.name = name;
-        this.role = role;
-        this.email = email;
-        this.password = password;
-    }
-
-    // Getters and Setters for basic fields
+    // Getters and setters
     public int getUserID() {
         return userID;
     }
@@ -50,14 +32,6 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
     }
 
     public String getEmail() {
@@ -76,13 +50,11 @@ public class User {
         this.password = password;
     }
 
-    // Getter for geolocationData
-    public List<GeolocationData> getGeolocationData() {
-        return geolocationData;
+    public List<CampusService> getCampusServices() {
+        return campusServices;
     }
 
-    // Setter for geolocationData
-    public void setGeolocationData(List<GeolocationData> geolocationData) {
-        this.geolocationData = geolocationData;
+    public void setCampusServices(List<CampusService> campusServices) {
+        this.campusServices = campusServices;
     }
 }
