@@ -7,6 +7,8 @@ import Events from './pages/events';
 import Feedback from './pages/Feedback';
 import Userprofile from './pages/UserProfilePage';
 import Notification from './pages/notification';
+import Detail from './pages/detailpage';
+
 function App() {
   return (
     <Routes>
@@ -18,6 +20,7 @@ function App() {
       <Route path="/userprofile" element={<Userprofile />} />
       <Route path="/Feedback" element={<Feedback />} />
       <Route path="/notifications" element={<Notification />} />
+      <Route path="/detail" element={<Detail />} />
       
     </Routes>
   );

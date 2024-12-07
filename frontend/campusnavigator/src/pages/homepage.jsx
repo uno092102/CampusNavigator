@@ -551,6 +551,17 @@ const HomePage = () => {
           <div style={{ display: "flex", alignItems: "center" }}>
             {/* Navigation Links */}
             <a
+            href="/detail"
+            style={{
+              color: '#FFFFFF',
+              marginRight: '30px',
+              textDecoration: 'none',
+              fontSize: '16px',
+            }}
+          >
+            Campus Building
+          </a>
+            <a
               href="/event"
               style={{
                 color: "#FFFFFF",
