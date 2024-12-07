@@ -584,8 +584,9 @@ const HomePage = () => {
               Announcement
             </a>
             {/* Notifications */}
+           
             <div style={{ marginRight: "20px", cursor: "pointer" }}>
-              <a href="#" style={{ color: "#FFFFFF" }}>
+              <a href="/notifications" style={{ color: "#FFFFFF" }}>
                 <FaBell size={24} />
               </a>
             </div>
