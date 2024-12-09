@@ -526,12 +526,11 @@ const styles = {
   container: {
     fontFamily: 'Arial, sans-serif',
     backgroundColor: '#FFFFFF', // Changed to match theme color
-    paddingTop: '80px', // Adjusted padding to account for the fixed header
     minHeight: '100vh',
     width: '100%',
   },
   content: {
-    padding: '20px',
+    padding: '40px',
     backgroundColor: '#FFFFFF', // Changed to match theme color
   },
   pageHeader: {
