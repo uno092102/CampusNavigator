@@ -8,11 +8,13 @@ import Feedback from './pages/Feedback';
 import Userprofile from './pages/UserProfilePage';
 import Notification from './pages/notification';
 import Detail from './pages/detailpage';
+import CampusService from './pages/campusservice';
+import IncidentReport from './pages/incidentreport';
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<IncidentReport />} />
       <Route path="/event" element={<Events />} /> 
       <Route path="/signup" element={<Signup />} />
       <Route path="/login" element={<Login />} />
@@ -21,6 +23,8 @@ function App() {
       <Route path="/Feedback" element={<Feedback />} />
       <Route path="/notifications" element={<Notification />} />
       <Route path="/detail" element={<Detail />} />
+      <Route path="/campusservice" element={<CampusService />} />
+      <Route path="/incidentreport" element={<IncidentReport />} />
       
     </Routes>
   );
