@@ -3,8 +3,6 @@ package com.campusnavigator.Service;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import javax.naming.NameNotFoundException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,8 +11,9 @@ import com.campusnavigator.Repository.CampusServiceRepository;
 
 @Service
 public class CampusServiceService {
+
     @Autowired
-    CampusServiceRepository crepo;
+    private CampusServiceRepository crepo;
 
     public CampusServiceService() {
         super();
@@ -30,42 +29,32 @@ public class CampusServiceService {
         return crepo.findAll();
     }
 
-    @SuppressWarnings("finally")
+    // Update an existing CampusService
     public CampusService putCampusService(int serviceID, CampusService newCampusService) {
-        CampusService campusService = new CampusService();
+        CampusService existingService = crepo.findById(serviceID)
+                .orElseThrow(() -> new NoSuchElementException("Campus Service with ID " + serviceID + " not found!"));
 
-        try {
-            // Find the existing service by serviceID
-            campusService = crepo.findByServiceID(serviceID).get();
+        // Update the fields
+        existingService.setName(newCampusService.getName());
+        existingService.setDescription(newCampusService.getDescription());
+        existingService.setLocationID(newCampusService.getLocationID());
+        existingService.setLocationType(newCampusService.getLocationType());
+        existingService.setOperatingHours(newCampusService.getOperatingHours());
+        existingService.setContactInfo(newCampusService.getContactInfo());
+        existingService.setServiceType(newCampusService.getServiceType());
+        existingService.setManagedBy(newCampusService.getManagedBy());
 
-            // Update the fields
-            campusService.setName(newCampusService.getName());
-            campusService.setDescription(newCampusService.getDescription());
-            campusService.setLocationID(newCampusService.getLocationID());
-            campusService.setLocationType(newCampusService.getLocationType());
-            campusService.setOperatingHours(newCampusService.getOperatingHours());
-            campusService.setContactInfo(newCampusService.getContactInfo());
-            campusService.setServiceType(newCampusService.getServiceType());
-            campusService.setManagedBy(newCampusService.getManagedBy());
-
-        } catch (NoSuchElementException nex) {
-            throw new NameNotFoundException("Campus Service with ID " + serviceID + " not found!");
-        } finally {
-            return crepo.save(campusService);
-        }
+        // Save the updated service
+        return crepo.save(existingService);
     }
 
     // Delete a CampusService by serviceID
     public String deleteCampusService(int serviceID) {
-        String msg = "";
-
-        if (crepo.findById(serviceID).isPresent()) {
+        if (crepo.existsById(serviceID)) {
             crepo.deleteById(serviceID);
-            msg = "Campus Service successfully deleted!";
+            return "Campus Service successfully deleted!";
         } else {
-            msg = "Campus Service with ID " + serviceID + " not found!";
+            throw new NoSuchElementException("Campus Service with ID " + serviceID + " not found!");
         }
-
-        return msg;
     }
 }
