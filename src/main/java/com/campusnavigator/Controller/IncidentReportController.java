@@ -2,7 +2,11 @@ package com.campusnavigator.Controller;
 
 import java.util.List;
 
+import javax.naming.NameNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,10 +47,23 @@ public class IncidentReportController {
         return sserv.getAllIncidentReport();
     }
 
-    @PutMapping("/putIncidentReport")
-    public IncidentReport putIncidentReport(@RequestParam int incidentID, @RequestBody IncidentReport newIncidentReport) {
-        return sserv.putIncidentReport(incidentID, newIncidentReport);
+   @PutMapping("/putIncidentReport/{incidentID}")
+public ResponseEntity<?> putIncidentReport(
+        @PathVariable int incidentID,
+        @RequestBody IncidentReport newIncidentReport) {
+    try {
+        IncidentReport updatedReport = sserv.putIncidentReport(incidentID, newIncidentReport);
+        return ResponseEntity.ok(updatedReport);
+    } catch (NameNotFoundException e) {
+        // Return a 404 Not Found response with an appropriate error message
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    } catch (Exception e) {
+        // Generic error handling
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
     }
+}
+
+
 
     @DeleteMapping("/deleteIncidentReport/{incidentID}")
     public String deleteIncidentReport(@PathVariable int incidentID)
