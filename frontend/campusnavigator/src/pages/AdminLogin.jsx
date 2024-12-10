@@ -1,6 +1,4 @@
-// src/pages/AdminLogin.jsx
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authenticateAdmin } from '../utils/auth';
 import { apiRequest } from '../utils/api';
@@ -10,21 +8,43 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+
+  // Set the document title
+  useEffect(() => {
+    document.title = 'Admin Login - Campus Navigator';
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    // Reset error states
+    setEmailError(false);
+    setPasswordError(false);
+    setError('');
+
+    // Simple validation
+    let valid = true;
+    if (email.trim() === '') {
+      setEmailError(true);
+      valid = false;
+    }
+    if (password.trim() === '') {
+      setPasswordError(true);
+      valid = false;
+    }
+
+    if (!valid) {
+      setError('Please fill in all fields.');
+      return;
+    }
 
     try {
-      // Fetch all users
       const users = await apiRequest('user/getAllSearch', 'GET');
-
-      // Find the user with matching email and password
       const adminUser = users.find(
         (user) => user.email === email && user.password === password && user.admin
       );
-
       if (adminUser) {
-        // Authenticate admin
         authenticateAdmin(adminUser);
         navigate('/admin/dashboard');
       } else {
@@ -38,60 +58,86 @@ const AdminLogin = () => {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>CampusNavigator Admin Login</h1>
-      <form onSubmit={handleLogin} style={styles.form}>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Email:</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={styles.input}
-          />
+      <div style={styles.formContainer}>
+        <div style={styles.logoContainer}>
+          <img src="/logoimg/Logolight.svg" alt="CampusNavigator Logo" style={styles.logo} />
+          <h1 style={styles.title}>Admin Login</h1>
         </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Password:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={styles.input}
-          />
-        </div>
-        {error && <p style={styles.error}>{error}</p>}
-        <button type="submit" style={styles.button}>Login</button>
-      </form>
+        <form onSubmit={handleLogin} style={styles.form}>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Email:</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{
+                ...styles.input,
+                borderColor: emailError ? 'red' : '#ccc',
+              }}
+            />
+          </div>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Password:</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{
+                ...styles.input,
+                borderColor: passwordError ? 'red' : '#ccc',
+              }}
+            />
+          </div>
+          {error && <p style={styles.error}>{error}</p>}
+          <button type="submit" style={styles.button}>
+            Login
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
 
 const styles = {
-  // ... (same as previous styles)
   container: {
-    backgroundColor: '#FFFFFF',
+    background: 'linear-gradient(to bottom, #7757FF, #FFFFFF)',
     minHeight: '100vh',
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     color: '#000',
   },
+  formContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    padding: '40px',
+    borderRadius: '8px',
+    boxShadow: '0px 0px 10px #ccc',
+    textAlign: 'center',
+    maxWidth: '500px',
+    width: '100%',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '20px',
+  },
+  logo: {
+    width: '300px',
+    marginLeft: '20px',
+  },
   title: {
     fontSize: '2em',
     color: '#7757FF',
-    marginBottom: '20px',
   },
   form: {
-    width: '300px',
-    backgroundColor: '#f9f9f9',
-    padding: '30px',
-    borderRadius: '8px',
-    boxShadow: '0px 0px 10px #ccc',
+    width: '100%',
+    display: 'block',
   },
   inputGroup: {
     marginBottom: '15px',
+    textAlign: 'left',
   },
   label: {
     display: 'block',
@@ -102,7 +148,7 @@ const styles = {
   input: {
     width: '100%',
     padding: '10px',
-    border: '1px solid #ccc',
+    border: '1px solid',
     borderRadius: '4px',
     outlineColor: '#7757FF',
   },

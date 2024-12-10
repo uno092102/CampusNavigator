@@ -1,9 +1,57 @@
-// src/pages/AdminDashboard.jsx
-
+// AdminDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logoutAdmin } from '../utils/auth';
 import { apiRequest } from '../utils/api';
+
+// Material-UI components and icons
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  CssBaseline,
+  Container,
+  Box,
+  TextField,
+  Checkbox,
+  FormControlLabel,
+  Paper,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableContainer,
+  Tooltip,
+  IconButton,
+} from '@mui/material';
+
+import {
+  Logout as LogoutIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+} from '@mui/icons-material';
+
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
+// Create a theme with your color palette
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#7757FF', // Your primary color
+    },
+    background: {
+      default: '#FFFFFF', // Background color
+    },
+  },
+  typography: {
+    fontFamily: 'Arial, sans-serif', // Customize as needed
+  },
+});
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -13,8 +61,13 @@ const AdminDashboard = () => {
     password: '',
     admin: false,
   });
-  const navigate = useNavigate();
   const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  // Set the document title
+  useEffect(() => {
+    document.title = 'Admin Dashboard - Campus Navigator';
+  }, []);
 
   useEffect(() => {
     fetchUsers();
@@ -22,13 +75,13 @@ const AdminDashboard = () => {
 
   const fetchUsers = async () => {
     try {
-        const users = await apiRequest('user/getAllSearch');
-        setUsers(users);
+      const users = await apiRequest('user/getAllSearch');
+      setUsers(users);
     } catch (error) {
-        console.error('Error fetching users:', error);
-        setError(error.message || 'Error fetching users.');
+      console.error('Error fetching users:', error);
+      setError(error.message || 'Error fetching users.');
     }
-};
+  };
 
   const handleLogout = () => {
     logoutAdmin();
@@ -49,20 +102,19 @@ const AdminDashboard = () => {
 
   const handleUpdateUser = async (user) => {
     try {
-        const response = await apiRequest(
-            `user/putUserRecord/${user.userID}`, // Note: no leading slash
-            'PUT',
-            user
-        );
-        if (response) {
-            // Handle successful update
-            fetchUsers(); // Refresh user list
-        }
+      const response = await apiRequest(
+        `user/putUserRecord/${user.userID}`,
+        'PUT',
+        user
+      );
+      if (response) {
+        fetchUsers();
+      }
     } catch (error) {
-        console.error('Error updating user:', error);
-        setError(error.message || 'Error updating user.');
+      console.error('Error updating user:', error);
+      setError(error.message || 'Error updating user.');
     }
-};
+  };
 
   const handleDeleteUser = async (userID) => {
     try {
@@ -75,99 +127,158 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <h1 style={styles.title}>CampusNavigator Admin Dashboard</h1>
-        <button onClick={handleLogout} style={styles.logoutButton}>
-          Logout
-        </button>
-      </header>
-
-      {error && <p style={styles.error}>{error}</p>}
-
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>Create New User</h2>
-        <form onSubmit={handleCreateUser} style={styles.form}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Name:</label>
-            <input
-              type="text"
-              value={newUser.name}
-              onChange={(e) =>
-                setNewUser({ ...newUser, name: e.target.value })
-              }
-              required
-              style={styles.input}
+    <ThemeProvider theme={theme}>
+      <Box sx={{ display: 'flex', backgroundColor: '#FFFFFF', minHeight: '100vh' }}>
+        <CssBaseline />
+        {/* AppBar */}
+        <AppBar position="fixed" sx={{ zIndex: 1201, backgroundColor: '#7757FF' }}>
+          <Toolbar>
+            <img
+              src="/logoimg/Logodark.svg"
+              alt="CampusNavigator Logo"
+              style={{ width: '200px', marginRight: '20px' }}
             />
-          </div>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Email:</label>
-            <input
-              type="email"
-              value={newUser.email}
-              onChange={(e) =>
-                setNewUser({ ...newUser, email: e.target.value })
-              }
-              required
-              style={styles.input}
-            />
-          </div>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Password:</label>
-            <input
-              type="password"
-              value={newUser.password}
-              onChange={(e) =>
-                setNewUser({ ...newUser, password: e.target.value })
-              }
-              required
-              style={styles.input}
-            />
-          </div>
-          <div style={styles.checkboxGroup}>
-            <label style={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={newUser.admin}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, admin: e.target.checked })
-                }
-                style={styles.checkbox}
-              />
-              Is Admin
-            </label>
-          </div>
-          <button type="submit" style={styles.button}>
-            Create User
-          </button>
-        </form>
-      </section>
+            <Typography variant="h6" sx={{ flexGrow: 1 }}>
+              Admin Dashboard
+            </Typography>
+            <Button
+              color="inherit"
+              onClick={handleLogout}
+              startIcon={<LogoutIcon />}
+              sx={{ textTransform: 'none' }}
+            >
+              Logout
+            </Button>
+          </Toolbar>
+        </AppBar>
 
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>User Management</h2>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>UserID</th>
-              <th style={styles.th}>Name</th>
-              <th style={styles.th}>Email</th>
-              <th style={styles.th}>Is Admin</th>
-              <th style={styles.th}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <UserRow
-                key={user.userID}
-                user={user}
-                onUpdate={handleUpdateUser}
-                onDelete={handleDeleteUser}
-              />
-            ))}
-          </tbody>
-        </table>
-      </section>
-    </div>
+        {/* Main Content */}
+        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+          <Toolbar /> {/* Spacer for fixed AppBar */}
+          <Container maxWidth="lg">
+            {error && (
+              <Typography color="error" sx={{ mb: 2 }}>
+                {error}
+              </Typography>
+            )}
+
+            {/* Create New User Section */}
+            <Paper
+              sx={{
+                p: 3,
+                mb: 4,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                boxShadow: '0px 0px 10px #ccc',
+              }}
+            >
+              <Typography variant="h5" gutterBottom sx={{ color: '#7757FF' }}>
+                Create New User
+              </Typography>
+              <Box
+                component="form"
+                onSubmit={handleCreateUser}
+                sx={{ display: 'block' }} // Ensure form display isn't overridden
+              >
+                <TextField
+                  label="Name"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                  required
+                  fullWidth
+                  margin="normal"
+                  InputLabelProps={{ style: { color: '#7757FF' } }}
+                />
+                <TextField
+                  label="Email"
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  required
+                  fullWidth
+                  margin="normal"
+                  InputLabelProps={{ style: { color: '#7757FF' } }}
+                />
+                <TextField
+                  label="Password"
+                  type="password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  required
+                  fullWidth
+                  margin="normal"
+                  InputLabelProps={{ style: { color: '#7757FF' } }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={newUser.admin}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, admin: e.target.checked })
+                      }
+                      sx={{
+                        color: '#7757FF',
+                        '&.Mui-checked': {
+                          color: '#7757FF',
+                        },
+                      }}
+                    />
+                  }
+                  label="Is Admin"
+                  sx={{ color: '#7757FF' }}
+                />
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  sx={{ mt: 2, textTransform: 'none' }}
+                >
+                  Create User
+                </Button>
+              </Box>
+            </Paper>
+
+            {/* User Management Section */}
+            <Paper
+              sx={{
+                p: 3,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                boxShadow: '0px 0px 10px #ccc',
+              }}
+            >
+              <Typography variant="h5" gutterBottom sx={{ color: '#7757FF' }}>
+                User Management
+              </Typography>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ color: '#7757FF', fontWeight: 'bold' }}>UserID</TableCell>
+                      <TableCell sx={{ color: '#7757FF', fontWeight: 'bold' }}>Name</TableCell>
+                      <TableCell sx={{ color: '#7757FF', fontWeight: 'bold' }}>Email</TableCell>
+                      <TableCell sx={{ color: '#7757FF', fontWeight: 'bold' }}>Is Admin</TableCell>
+                      <TableCell align="right" sx={{ color: '#7757FF', fontWeight: 'bold' }}>
+                        Actions
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {users.map((user) => (
+                      <UserRow
+                        key={user.userID}
+                        user={user}
+                        onUpdate={handleUpdateUser}
+                        onDelete={handleDeleteUser}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </Container>
+        </Box>
+      </Box>
+    </ThemeProvider>
   );
 };
 
@@ -180,191 +291,98 @@ const UserRow = ({ user, onUpdate, onDelete }) => {
     setIsEditing(false);
   };
 
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditableUser(user);
+  };
+
   return (
-    <tr>
-      <td style={styles.td}>{user.userID}</td>
-      <td style={styles.td}>
+    <TableRow>
+      <TableCell>{user.userID}</TableCell>
+      <TableCell>
         {isEditing ? (
-          <input
-            type="text"
+          <TextField
             value={editableUser.name}
-            onChange={(e) =>
-              setEditableUser({ ...editableUser, name: e.target.value })
-            }
-            style={styles.input}
+            onChange={(e) => setEditableUser({ ...editableUser, name: e.target.value })}
+            size="small"
+            required
           />
         ) : (
           user.name
         )}
-      </td>
-      <td style={styles.td}>
+      </TableCell>
+      <TableCell>
         {isEditing ? (
-          <input
+          <TextField
             type="email"
             value={editableUser.email}
             onChange={(e) =>
               setEditableUser({ ...editableUser, email: e.target.value })
             }
-            style={styles.input}
+            size="small"
+            required
           />
         ) : (
           user.email
         )}
-      </td>
-      <td style={styles.td}>
+      </TableCell>
+      <TableCell>
         {isEditing ? (
-          <input
-            type="checkbox"
+          <Checkbox
             checked={editableUser.admin}
             onChange={(e) =>
               setEditableUser({ ...editableUser, admin: e.target.checked })
             }
-            style={styles.checkbox}
+            sx={{
+              color: '#7757FF',
+              '&.Mui-checked': {
+                color: '#7757FF',
+              },
+            }}
           />
         ) : editableUser.admin ? (
           'Yes'
         ) : (
           'No'
         )}
-      </td>
-      <td style={styles.td}>
+      </TableCell>
+      <TableCell align="right">
         {isEditing ? (
           <>
-            <button onClick={handleSave} style={styles.actionButton}>
-              Save
-            </button>
-            <button
-              onClick={() => {
-                setIsEditing(false);
-                setEditableUser(user);
-              }}
-              style={styles.actionButton}
-            >
-              Cancel
-            </button>
+            <Tooltip title="Save">
+              <IconButton onClick={handleSave} color="primary">
+                <SaveIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Cancel">
+              <IconButton onClick={handleCancel} color="inherit">
+                <CancelIcon />
+              </IconButton>
+            </Tooltip>
           </>
         ) : (
           <>
-            <button onClick={() => setIsEditing(true)} style={styles.actionButton}>
-              Edit
-            </button>
-            <button
-              onClick={() => onDelete(user.userID)}
-              style={styles.actionButton}
-            >
-              Delete
-            </button>
+            <Tooltip title="Edit">
+              <IconButton
+                onClick={() => setIsEditing(true)}
+                color="primary"
+              >
+                <EditIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete">
+              <IconButton
+                onClick={() => onDelete(user.userID)}
+                color="error"
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
           </>
         )}
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
-};
-
-const styles = {
-  container: {
-    backgroundColor: '#FFFFFF',
-    minHeight: '100vh',
-    padding: '20px',
-    color: '#000',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '30px',
-  },
-  title: {
-    fontSize: '2em',
-    color: '#7757FF',
-  },
-  logoutButton: {
-    padding: '10px 15px',
-    backgroundColor: '#FF4D4D',
-    color: '#FFFFFF',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-  },
-  section: {
-    marginBottom: '40px',
-  },
-  sectionTitle: {
-    fontSize: '1.5em',
-    color: '#7757FF',
-    marginBottom: '20px',
-  },
-  form: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    marginBottom: '20px',
-  },
-  inputGroup: {
-    flex: '1 1 200px',
-    marginRight: '20px',
-    marginBottom: '15px',
-  },
-  label: {
-    display: 'block',
-    marginBottom: '5px',
-    fontWeight: 'bold',
-  },
-  input: {
-    width: '100%',
-    padding: '8px',
-    borderRadius: '4px',
-    border: '1px solid #ccc',
-    outlineColor: '#7757FF',
-  },
-  checkboxGroup: {
-    flex: '1 1 100%',
-    marginBottom: '15px',
-  },
-  checkboxLabel: {
-    fontWeight: 'bold',
-  },
-  checkbox: {
-    marginRight: '10px',
-  },
-  button: {
-    padding: '10px 15px',
-    backgroundColor: '#7757FF',
-    color: '#FFFFFF',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    alignSelf: 'flex-start',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-  },
-  th: {
-    borderBottom: '2px solid #7757FF',
-    textAlign: 'left',
-    padding: '10px',
-    color: '#7757FF',
-  },
-  td: {
-    borderBottom: '1px solid #ccc',
-    padding: '10px',
-  },
-  actionButton: {
-    marginRight: '5px',
-    padding: '5px 10px',
-    backgroundColor: '#7757FF',
-    color: '#FFFFFF',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  },
-  error: {
-    color: 'red',
-    marginBottom: '20px',
-    fontWeight: 'bold',
-  },
 };
 
 export default AdminDashboard;
