@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
 @RequestMapping(method = RequestMethod.GET,path="/api/user")
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:3000")  
 public class UserController {
 
     @Autowired

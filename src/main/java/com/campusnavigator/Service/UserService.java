@@ -36,8 +36,7 @@ public User putUser(int userID, User newUser)
     try {
         search = urepo.findById(userID).get();
 
-        search.setName(newUser.getName());
-        search.setEmail(newUser.getEmail());
+       
         search.setPassword(newUser.getPassword());
 
     } catch (NoClassDefFoundError nex){
