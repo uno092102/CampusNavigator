@@ -53,6 +53,10 @@ const Event = () => {
         );
     };
 
+    useEffect(() => {
+        document.title = 'Calendar - Campus Navigator';
+      }, []);
+
     // Effects
     useEffect(() => {
         const userData = JSON.parse(localStorage.getItem("user"));

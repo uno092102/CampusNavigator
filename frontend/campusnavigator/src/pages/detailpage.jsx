@@ -40,6 +40,10 @@ const Header = () => {
     console.log('Search submitted:', searchText);
   };
 
+  useEffect(() => {
+    document.title = 'Building - Campus Navigator';
+  }, []);
+
   const handleResultClick = (item) => {
     // Handle search result click (placeholder)
     console.log('Result clicked:', item);
