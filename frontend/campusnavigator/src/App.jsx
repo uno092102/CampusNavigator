@@ -11,6 +11,7 @@ import Feedback from './pages/Feedback';
 import Userprofile from './pages/UserProfilePage';
 import Notification from './pages/notification';
 import Detail from './pages/detailpage';
+import Announcement from './pages/Announcement';
 
 // Import admin pages
 import AdminLogin from './pages/AdminLogin';
@@ -33,6 +34,7 @@ function App() {
       <Route path="/Feedback" element={<Feedback />} />
       <Route path="/notifications" element={<Notification />} />
       <Route path="/detail" element={<Detail />} />
+      <Route path="/announcement" element={<Announcement />} />
 
       {/* Admin Routes */}
       <Route path="/admin/login" element={<AdminLogin />} />
