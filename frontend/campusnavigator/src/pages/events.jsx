@@ -18,7 +18,6 @@ const Event = () => {
     // State Management
     const [user, setUser] = useState(null);
     const [dropdownOpen, setDropdownOpen] = useState(false);
-    const [developerMode, setDeveloperMode] = useState(false);
     const [searchText, setSearchText] = useState("");
     const [showCreateEventModal, setShowCreateEventModal] = useState(false);
     const searchRef = useRef(null);
@@ -59,13 +58,32 @@ const Event = () => {
 
     // Effects
     useEffect(() => {
-        const userData = JSON.parse(localStorage.getItem("user"));
-        if (!userData) {
-            navigate("/login");
+        const localUserData = JSON.parse(localStorage.getItem("user"));
+        if (!localUserData) {
+          navigate("/login");
         } else {
-            setUser(userData);
+          // Fetch all users to get the current user's admin status
+          axios.get('http://localhost:8080/api/user/getAllSearch')
+            .then((response) => {
+              const usersData = response.data;
+              // Find the current user in the list
+              const fullUserData = usersData.find(
+                (user) => user.userID === localUserData.userID
+              );
+              if (fullUserData) {
+                setUser(fullUserData);
+                console.log("Fetched full user data:", fullUserData);
+              } else {
+                console.error("User not found in getAllSearch");
+                setUser(localUserData); // Use local data if not found
+              }
+            })
+            .catch((error) => {
+              console.error("Error fetching user data:", error);
+              setUser(localUserData); // Use local data on error
+            });
         }
-    }, [navigate]);
+      }, [navigate]);
 
     useEffect(() => {
         fetchEvents();
@@ -161,9 +179,12 @@ const Event = () => {
     };
 
     const handleSelectEvent = (event) => {
-        setCurrentEvent(event);
-        setError('');
-    };
+        if (user && user.admin) {
+          setCurrentEvent(event);
+          setShowCreateEventModal(true);
+          setError('');
+        }
+      };
 
     const handleDelete = async () => {
         if (currentEvent.eventID) {
@@ -196,10 +217,6 @@ const Event = () => {
     const handleNavigateToProfile = () => {
         setDropdownOpen(false);
         navigate("/userprofile");
-    };
-
-    const handleToggleDevelopersMode = () => {
-        setDeveloperMode((prevDeveloperMode) => !prevDeveloperMode);
     };
 
     const handleFeedback = () => {
@@ -282,7 +299,7 @@ const Event = () => {
                             fontSize: '16px',
                             }}
                         >
-                            Campus Building
+                            Building
                         </a>
                         <a
                             href="/event"
@@ -304,7 +321,7 @@ const Event = () => {
                                 fontSize: "16px",
                             }}
                         >
-                            Campus Service
+                            Service
                         </a>
                         <a
                             href="#"
@@ -358,12 +375,6 @@ const Event = () => {
                                     }}
                                 >
                                     <div
-                                        onClick={handleToggleDevelopersMode}
-                                        style={{ padding: "10px 20px", cursor: "pointer" }}
-                                    >
-                                        {developerMode ? "Disable Developer Mode" : "Enable Developer Mode"}
-                                    </div>
-                                    <div
                                         onClick={handleNavigateToProfile}
                                         style={{ padding: "10px 20px", cursor: "pointer" }}
                                     >
@@ -395,7 +406,7 @@ const Event = () => {
                 <div className="row">
                     <div className="col-md-12">
                         <h2>Event Calendar</h2>
-                        {developerMode && <CreateEventButton />}
+                        {user && user.admin && <CreateEventButton />}
                         <Calendar
                             localizer={localizer}
                             events={events}
@@ -506,28 +517,28 @@ const Event = () => {
                                 />
                             </div>
                             <div className="mt-3">
+                            {user && user.admin && (
+                                <>
                                 <button type="submit" className="btn btn-primary me-2">
                                     {currentEvent.eventID ? 'Update Event' : 'Create Event'}
                                 </button>
                                 {currentEvent.eventID && (
-                                    <button 
-                                        type="button" 
-                                        className="btn btn-danger me-2" 
-                                        onClick={handleDelete}
-                                    >
-                                        Delete Event
+                                    <button type="button" className="btn btn-danger me-2" onClick={handleDelete}>
+                                    Delete Event
                                     </button>
                                 )}
-                                <button 
-                                    type="button" 
-                                    className="btn btn-secondary" 
-                                    onClick={() => {
-                                        resetForm();
-                                        setShowCreateEventModal(false);
-                                    }}
-                                >
-                                    Cancel
-                                </button>
+                                </>
+                            )}
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={() => {
+                                resetForm();
+                                setShowCreateEventModal(false);
+                                }}
+                            >
+                                Cancel
+                            </button>
                             </div>
                         </form>
                     </div>
