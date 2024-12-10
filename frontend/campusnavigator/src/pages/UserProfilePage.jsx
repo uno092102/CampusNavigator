@@ -1,22 +1,40 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaSearch, FaBell } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; 
 
 function UserProfilePage() {
   const [searchText, setSearchText] = useState("");
+  const [user, setUser] = useState(null);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("")
   const [searchResults] = useState([]); // Placeholder for search results
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showUpdateProfileForm, setShowUpdateProfileForm] = useState(false);
   const [showChangePasswordForm, setShowChangePasswordForm] = useState(false);
   const searchRef = useRef(null);
   const navigate = useNavigate();
+  const [password, setPassword] = useState("");
+  const userData = JSON.parse(localStorage.getItem("user"));
+  console.log("User ID = " , userData.userID)
+  const userID = userData.userID
+  
 
-  const user = {
-    name: "John Doe",
+
+  const userProf = {
     role: "Administrator", // Set to 'Administrator' to display managerial sections
-    email: "johndoe@example.com",
+    email: userData.email,
     profilePicture: "https://picsum.photos/200/300", // Placeholder image
   };
+
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (!userData) {
+      navigate("/login");
+    } else {
+      setUser(userData);
+    }
+  }, [navigate]);
 
   useEffect(() => {
     document.title = "User Profile - CampusNavigator";
@@ -25,6 +43,25 @@ function UserProfilePage() {
   const handleFeedback = () => {
     navigate("/Feedback");
   };
+
+  const handleUpdateProfile = (e) => {
+    /*e.preventDefault();
+
+    const update = {name, email, role}
+    console.log(update)
+
+    fetch(`http://localhost:8080/api/user/putUserRecord?userID=${userData.userID}`,
+      {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(update)
+      }
+    ).then(() => 
+    {
+      alert("Update User Profile Successfull!");
+    })*/
+
+  }
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -58,7 +95,28 @@ function UserProfilePage() {
   const handleCloseForms = () => {
     setShowUpdateProfileForm(false);
     setShowChangePasswordForm(false);
+
+
   };
+
+  const handleSaveChanges = (e) => {
+    e.preventDefault();
+
+    const newPassword = {password}
+    console.log(newPassword)
+
+    fetch(`http://localhost:8080/api/user/putUserRecord?userID=${userData.userID}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        password: password
+      })
+    }).then(() => {
+      alert("Password successfully changed!");
+    })
+  }
 
   return (
     <div
@@ -191,7 +249,7 @@ function UserProfilePage() {
               }}
             >
               <img
-                src={user.profilePicture}
+                src={userProf.profilePicture}
                 alt="User Profile"
                 style={{
                   width: "40px",
@@ -204,7 +262,7 @@ function UserProfilePage() {
                   setDropdownOpen(!dropdownOpen);
                 }}
               />
-              <span style={{ marginRight: "10px" }}>{user.name}</span>
+              <span style={{ marginRight: "10px" }}>{userProf.name}</span>
               {dropdownOpen && (
                 <div
                   style={{
@@ -274,7 +332,7 @@ function UserProfilePage() {
           }}
         >
           <img
-            src={user.profilePicture}
+            src={userProf.profilePicture}
             alt="User Profile"
             style={{
               width: "120px",
@@ -285,12 +343,12 @@ function UserProfilePage() {
             }}
           />
           <div>
-            <h1 style={{ color: "#333", marginBottom: "10px" }}>{user.name}</h1>
+            <h1 style={{ color: "#333", marginBottom: "10px" }}>{user ? user.name : ""}</h1>
             <p style={{ margin: "5px 0" }}>
-              <strong>Role:</strong> {user.role}
+              <strong>Role:</strong> {userProf.role}
             </p>
             <p style={{ margin: "5px 0" }}>
-              <strong>Email:</strong> {user.email}
+              <strong>Email:</strong> {userProf.email}
             </p>
           </div>
         </section>
@@ -366,7 +424,8 @@ function UserProfilePage() {
                       type="text"
                       id="name"
                       name="name"
-                      defaultValue={user.name}
+                      defaultValue={userData.name}
+                      //onChange={(e)=> setName(e.target.value)}
                       style={{
                         width: "100%",
                         padding: "8px",
@@ -386,7 +445,8 @@ function UserProfilePage() {
                       type="email"
                       id="email"
                       name="email"
-                      defaultValue={user.email}
+                      defaultValue={userProf.email}
+                      //onChange={(e)=>setEmail(e.target.value)}
                       style={{
                         width: "100%",
                         padding: "8px",
@@ -405,7 +465,8 @@ function UserProfilePage() {
                     <select
                       id="role"
                       name="role"
-                      defaultValue={user.role}
+                      defaultValue={userProf.role}
+                      //onChange={(e)=> setRole(e.target.value)}
                       style={{
                         width: "100%",
                         padding: "8px",
@@ -422,7 +483,7 @@ function UserProfilePage() {
                   {/* Placeholder for submit button */}
                   <button
                     type="button"
-                    onClick={handleCloseForms}
+                    onClick={handleUpdateProfile}
                     style={{
                       padding: "10px 20px",
                       backgroundColor: "#7757FF",
@@ -474,7 +535,9 @@ function UserProfilePage() {
                     <input
                       type="password"
                       id="newPassword"
-                      name="newPassword"
+                      name="password"
+                      value={password}
+                      onChange={(e)=> setPassword(e.target.value)}
                       style={{
                         width: "100%",
                         padding: "8px",
@@ -505,7 +568,7 @@ function UserProfilePage() {
                   {/* Placeholder for submit button */}
                   <button
                     type="button"
-                    onClick={handleCloseForms}
+                    onClick={handleSaveChanges}
                     style={{
                       padding: "10px 20px",
                       backgroundColor: "#7757FF",
@@ -751,7 +814,7 @@ function UserProfilePage() {
         </section>
 
         {/* Managed Campus Services and Announcements Posted */}
-        {user.role === "Staff" || user.role === "Administrator" ? (
+        {userProf.role === "Staff" || userProf.role === "Administrator" ? (
           <section
             style={{
               marginTop: "40px",

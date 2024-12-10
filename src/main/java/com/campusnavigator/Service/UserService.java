@@ -2,6 +2,8 @@ package com.campusnavigator.Service;
 
 import java.util.List;
 
+import javax.naming.NameAlreadyBoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +30,24 @@ public class UserService {
         return urepo.findAll();
     }
 //update
+    @SuppressWarnings("finally")
+    public User putUserRecord(int userID, User newUser)
+{
+    User search = new User();
+
+    try {
+        search = urepo.findById(userID).get();
+
+       
+        search.setPassword(newUser.getPassword());
+
+    } catch (NoClassDefFoundError nex){
+        throw new NameAlreadyBoundException("Search UserID: " + userID + " not found");
+    }finally
+    {
+        return urepo.save(search);
+    }
+}
 
 public User putUser(int userID, User newUser) {
     // Find the existing user

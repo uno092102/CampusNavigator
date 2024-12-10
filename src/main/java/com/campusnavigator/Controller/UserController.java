@@ -20,8 +20,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 
 @RestController
-@RequestMapping("/api/user")
-@CrossOrigin
+@RequestMapping(method = RequestMethod.GET,path="/api/user")
+@CrossOrigin(origins = "http://localhost:3000")  
 public class UserController {
 
     @Autowired
