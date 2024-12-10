@@ -12,34 +12,33 @@ export async function apiRequest(endpoint, method = 'GET', body = null) {
         const config = {
             method,
             headers,
-            credentials: 'include', // Include if you're using cookies
+            credentials: 'include',
         };
 
         if (body && (method === 'POST' || method === 'PUT')) {
             config.body = JSON.stringify(body);
         }
 
-        // Remove any leading slashes from the endpoint
         const cleanEndpoint = endpoint.replace(/^\/+/, '');
         const url = `${BASE_URL}/${cleanEndpoint}`;
 
         const response = await fetch(url, config);
 
-        // Handle non-OK responses
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({
-                message: `HTTP error! status: ${response.status}`
-            }));
-            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        // Check if response has content
+        // For DELETE requests or empty responses, return success without parsing JSON
+        if (method === 'DELETE' || response.status === 204) {
+            return { success: true };
+        }
+
         const contentType = response.headers.get('Content-Type');
         if (contentType && contentType.includes('application/json')) {
             return await response.json();
         }
         
-        return null;
+        return { success: true };
     } catch (error) {
         console.error('API Request Error:', error);
         throw error;
