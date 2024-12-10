@@ -21,7 +21,6 @@ const Header = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const [developerMode, setDeveloperMode] = useState(false);
 
   useEffect(() => {
     // Fetch user data from the API
@@ -47,10 +46,6 @@ const Header = () => {
   const handleResultClick = (item) => {
     // Handle search result click (placeholder)
     console.log('Result clicked:', item);
-  };
-
-  const handleToggleDevelopersMode = () => {
-    setDeveloperMode(!developerMode);
   };
 
   const handleNavigateToProfile = () => {
@@ -184,7 +179,7 @@ const Header = () => {
               fontSize: '16px',
             }}
           >
-            Campus Building
+            Building
           </a>
           <a
             href="/event"
@@ -206,7 +201,7 @@ const Header = () => {
               fontSize: '16px',
             }}
           >
-            Campus Service
+            Service
           </a>
           <a
             href="#"
@@ -263,14 +258,6 @@ const Header = () => {
                   minWidth: '200px',
                 }}
               >
-                <div
-                  onClick={handleToggleDevelopersMode}
-                  style={{ padding: '10px 20px', cursor: 'pointer' }}
-                >
-                  {developerMode
-                    ? 'Disable Developer Mode'
-                    : 'Enable Developer Mode'}
-                </div>
                 <div
                   onClick={handleNavigateToProfile}
                   style={{ padding: '10px 20px', cursor: 'pointer' }}
