@@ -21,18 +21,34 @@ const Header = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const [developerMode, setDeveloperMode] = useState(false);
 
   useEffect(() => {
-    // Fetch user data from the API
-    fetch('http://localhost:8080/api/user/getAllSearch')
-      .then((response) => response.json())
-      .then((data) => {
-        // Assuming the first user is the logged-in user
-        setUser(data[0]);
-      })
-      .catch((error) => console.error('Error fetching user data:', error));
-  }, []);
+    const localUserData = JSON.parse(localStorage.getItem("user"));
+    if (!localUserData) {
+      navigate("/login");
+    } else {
+      // Fetch all users to get the current user's data
+      fetch("http://localhost:8080/api/user/getAllSearch")
+        .then((response) => response.json())
+        .then((usersData) => {
+          // Find the current user in the list
+          const fullUserData = usersData.find(
+            (user) => user.userID === localUserData.userID
+          );
+          if (fullUserData) {
+            setUser(fullUserData);
+            console.log("Fetched full user data:", fullUserData);
+          } else {
+            console.error("User not found in getAllSearch");
+            setUser(localUserData); // Use local data if not found
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching user data:", error);
+          setUser(localUserData); // Use local data on error
+        });
+    }
+  }, [navigate]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -40,13 +56,13 @@ const Header = () => {
     console.log('Search submitted:', searchText);
   };
 
+  useEffect(() => {
+    document.title = 'Building - Campus Navigator';
+  }, []);
+
   const handleResultClick = (item) => {
     // Handle search result click (placeholder)
     console.log('Result clicked:', item);
-  };
-
-  const handleToggleDevelopersMode = () => {
-    setDeveloperMode(!developerMode);
   };
 
   const handleNavigateToProfile = () => {
@@ -180,7 +196,7 @@ const Header = () => {
               fontSize: '16px',
             }}
           >
-            Campus Building
+            Building
           </a>
           <a
             href="/event"
@@ -202,7 +218,7 @@ const Header = () => {
               fontSize: '16px',
             }}
           >
-            Campus Service
+            Service
           </a>
           <a
             href="#"
@@ -259,14 +275,6 @@ const Header = () => {
                   minWidth: '200px',
                 }}
               >
-                <div
-                  onClick={handleToggleDevelopersMode}
-                  style={{ padding: '10px 20px', cursor: 'pointer' }}
-                >
-                  {developerMode
-                    ? 'Disable Developer Mode'
-                    : 'Enable Developer Mode'}
-                </div>
                 <div
                   onClick={handleNavigateToProfile}
                   style={{ padding: '10px 20px', cursor: 'pointer' }}
@@ -353,26 +361,45 @@ const BuildingList = () => {
 const BuildingDetails = ({ building, buildings, onBack }) => {
   const [selectedPOI, setSelectedPOI] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
-  const [nearestBuildingName, setNearestBuildingName] = useState(
-    'an unknown location'
-  );
+  const [nearestBuildingName, setNearestBuildingName] = useState('an unknown location');
 
   useEffect(() => {
-    // Fetch user geolocation data from the API
-    fetch('http://localhost:8080/api/user/getAllSearch')
-      .then((response) => response.json())
-      .then((data) => {
-        // Assuming the first user's geolocation is used
-        const user = data[0];
-        const geoData = user.geolocationData[0];
-        setUserLocation({
-          latitude: geoData.latitude,
-          longitude: geoData.longitude,
-          userName: user.name,
+    const localUserData = JSON.parse(localStorage.getItem("user"));
+    if (!localUserData) {
+      console.error("No user data found in localStorage");
+      // Optionally navigate to login or handle accordingly
+    } else {
+      fetch("http://localhost:8080/api/user/getAllSearch")
+        .then((response) => response.json())
+        .then((usersData) => {
+          // Find the current user in the list
+          const fullUserData = usersData.find(
+            (user) => user.userID === localUserData.userID
+          );
+          if (fullUserData) {
+            if (fullUserData.geolocationData && fullUserData.geolocationData.length > 0) {
+              const geoData = fullUserData.geolocationData[0];
+              setUserLocation({
+                latitude: geoData.latitude,
+                longitude: geoData.longitude,
+                userName: fullUserData.name,
+              });
+            } else {
+              console.error("No geolocation data available for this user.");
+              // Handle absence of geolocation data
+              setUserLocation(null);
+            }
+          } else {
+            console.error("User not found in getAllSearch");
+            // Handle user not found scenario
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching user geolocation:", error);
+          // Handle error accordingly
         });
-      })
-      .catch((error) => console.error('Error fetching user geolocation:', error));
-  }, []);
+    }
+  }, [buildings]);
 
   useEffect(() => {
     if (userLocation && buildings) {
@@ -526,12 +553,11 @@ const styles = {
   container: {
     fontFamily: 'Arial, sans-serif',
     backgroundColor: '#FFFFFF', // Changed to match theme color
-    paddingTop: '80px', // Adjusted padding to account for the fixed header
     minHeight: '100vh',
     width: '100%',
   },
   content: {
-    padding: '20px',
+    padding: '40px',
     backgroundColor: '#FFFFFF', // Changed to match theme color
   },
   pageHeader: {
@@ -702,7 +728,6 @@ const styles = {
   },
   geolocation: {
     marginTop: '20px',
-    padding: '10px',
     backgroundColor: '#FFFFFF', // Changed to match theme color
     borderRadius: '8px',
     textAlign: 'left', // Align to left side

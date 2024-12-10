@@ -15,6 +15,8 @@ public class UserService {
 
     @Autowired
     UserRepository urepo;
+    @Autowired
+    private UserRepository userRepository;
 
     public UserService(){
         super();
@@ -28,8 +30,8 @@ public class UserService {
         return urepo.findAll();
     }
 //update
-@SuppressWarnings("finally")
-public User putUser(int userID, User newUser)
+    @SuppressWarnings("finally")
+    public User putUserRecord(int userID, User newUser)
 {
     User search = new User();
 
@@ -45,6 +47,31 @@ public User putUser(int userID, User newUser)
     {
         return urepo.save(search);
     }
+}
+
+public User putUser(int userID, User newUser) {
+    // Find the existing user
+    User existingUser = userRepository.findById(userID)
+        .orElseThrow(() -> new RuntimeException("User not found with id: " + userID));
+    
+    // Update the existing user's fields if new values are provided
+    if (newUser.getName() != null) {
+        existingUser.setName(newUser.getName());
+    }
+    if (newUser.getEmail() != null) {
+        existingUser.setEmail(newUser.getEmail());
+    }
+    if (newUser.getPassword() != null) {
+        existingUser.setPassword(newUser.getPassword());
+    }
+    if (newUser.getRole() != null) {
+        existingUser.setRole(newUser.getRole());
+    }
+    // Update admin status
+    existingUser.setAdmin(newUser.isAdmin());
+    
+    // Save and return the updated user
+    return userRepository.save(existingUser);
 }
 //delete
 public String deleteUser(int userID)

@@ -199,7 +199,7 @@ function UserProfilePage() {
                 fontSize: '16px',
               }}
             >
-              Campus Building
+              Building
             </a>
             <a
               href="/event"
@@ -221,7 +221,7 @@ function UserProfilePage() {
                 fontSize: "16px",
               }}
             >
-              Campus Service
+              Service
             </a>
             <a
               href="#"

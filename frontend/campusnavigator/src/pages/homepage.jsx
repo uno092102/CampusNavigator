@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaSearch, FaPlus } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -39,7 +39,6 @@ const HomePage = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
   const [userGeolocationId, setUserGeolocationId] = useState(null);
-  const [developerMode, setDeveloperMode] = useState(false);
   const [addingBuilding, setAddingBuilding] = useState(false);
   const [newBuildingPosition, setNewBuildingPosition] = useState(null);
   const [newBuildingData, setNewBuildingData] = useState({
@@ -73,11 +72,30 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData) {
+    const localUserData = JSON.parse(localStorage.getItem("user"));
+    if (!localUserData) {
       navigate("/login");
     } else {
-      setUser(userData);
+      // Fetch all users to get the current user's admin status
+      fetch("http://localhost:8080/api/user/getAllSearch")
+        .then((response) => response.json())
+        .then((usersData) => {
+          // Find the current user in the list
+          const fullUserData = usersData.find(
+            (user) => user.userID === localUserData.userID
+          );
+          if (fullUserData) {
+            setUser(fullUserData);
+            console.log("Fetched full user data:", fullUserData);
+          } else {
+            console.error("User not found in getAllSearch");
+            setUser(localUserData); // Use local data if not found
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching user data:", error);
+          setUser(localUserData); // Use local data on error
+        });
     }
   }, [navigate]);
 
@@ -90,8 +108,13 @@ const HomePage = () => {
       .catch((error) => console.error("Error fetching buildings:", error));
   }, []);
 
+  // useEffect to fetch geolocation data
   useEffect(() => {
     if (user) {
+      // Reset user-related state variables
+      setUserGeolocationId(null);
+      setUserLocation({ latitude: 0, longitude: 0 });
+
       // Fetch geolocation data for the current user
       fetch(
         `http://localhost:8080/api/geolocation/getGeolocationByUser/${user.userID}`
@@ -118,6 +141,7 @@ const HomePage = () => {
             )
               .then((postResponse) => postResponse.json())
               .then((newGeo) => {
+                console.log("Created new geolocation:", newGeo);
                 setUserLocation({
                   latitude: newGeo.latitude,
                   longitude: newGeo.longitude,
@@ -130,6 +154,7 @@ const HomePage = () => {
         })
         .then((data) => {
           if (data) {
+            console.log("Fetched geolocation data:", data);
             setUserLocation({
               latitude: data.latitude,
               longitude: data.longitude,
@@ -140,6 +165,10 @@ const HomePage = () => {
         .catch((error) =>
           console.error("Error fetching or creating user geolocation:", error)
         );
+    } else {
+      // If user is null, reset state variables
+      setUserGeolocationId(null);
+      setUserLocation({ latitude: 0, longitude: 0 });
     }
   }, [user]);
 
@@ -254,44 +283,49 @@ const HomePage = () => {
     navigate("/login");
   };
 
-  const handleToggleDevelopersMode = () => {
-    setDeveloperMode((prevDeveloperMode) => !prevDeveloperMode);
-  };
-
   const handleAddBuildingClick = () => {
     setAddingBuilding(true);
     setNewBuildingPosition(null);
   };
 
-  const handleMapClick = (e) => {
-    if (addingBuilding) {
-      setNewBuildingPosition(e.latlng);
-      setAddingBuilding(false);
-    } else if (updatingGeolocation) {
-      const data = {
-        latitude: e.latlng.lat,
-        longitude: e.latlng.lng,
-        timestamp: new Date().toISOString(), // Corrected property name
-        userID: user.userID,
-      };
-      fetch(
-        `http://localhost:8080/api/geolocation/putGeolocation/${userGeolocationId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        }
-      )
-        .then(() => {
-          setUserLocation({
-            latitude: data.latitude,
-            longitude: data.longitude,
-          });
-          setUpdatingGeolocation(false);
-        })
-        .catch((error) => console.error("Error updating geolocation:", error));
-    }
-  };
+  // Handle map click with useCallback
+  const handleMapClick = useCallback(
+    (e) => {
+      console.log("handleMapClick - user:", user);
+      if (addingBuilding) {
+        setNewBuildingPosition(e.latlng);
+        setAddingBuilding(false);
+      } else if (updatingGeolocation) {
+        const data = {
+          latitude: e.latlng.lat,
+          longitude: e.latlng.lng,
+          timestamp: new Date().toISOString(),
+          userID: user.userID,
+        };
+        fetch(
+          `http://localhost:8080/api/geolocation/putGeolocation/${userGeolocationId}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          }
+        )
+          .then((response) => response.json())
+          .then((updatedGeo) => {
+            console.log("Updated geolocation data:", updatedGeo);
+            setUserLocation({
+              latitude: data.latitude,
+              longitude: data.longitude,
+            });
+            setUpdatingGeolocation(false);
+          })
+          .catch((error) =>
+            console.error("Error updating geolocation:", error)
+          );
+      }
+    },
+    [addingBuilding, updatingGeolocation, user, userGeolocationId]
+  );
 
   const handleNewBuildingChange = (e) => {
     const { name, value } = e.target;
@@ -551,16 +585,16 @@ const HomePage = () => {
           <div style={{ display: "flex", alignItems: "center" }}>
             {/* Navigation Links */}
             <a
-            href="/detail"
-            style={{
-              color: '#FFFFFF',
-              marginRight: '30px',
-              textDecoration: 'none',
-              fontSize: '16px',
-            }}
-          >
-            Campus Building
-          </a>
+              href="/detail"
+              style={{
+                color: "#FFFFFF",
+                marginRight: "30px",
+                textDecoration: "none",
+                fontSize: "16px",
+              }}
+            >
+              Building
+            </a>
             <a
               href="/event"
               style={{
@@ -581,7 +615,7 @@ const HomePage = () => {
                 fontSize: "16px",
               }}
             >
-              Campus Service
+              Service
             </a>
             <a
               href="#"
@@ -595,7 +629,7 @@ const HomePage = () => {
               Announcement
             </a>
             {/* Notifications */}
-           
+
             <div style={{ marginRight: "20px", cursor: "pointer" }}>
               <a href="/notifications" style={{ color: "#FFFFFF" }}>
                 <FaBell size={24} />
@@ -641,14 +675,6 @@ const HomePage = () => {
                     minWidth: "200px",
                   }}
                 >
-                  <div
-                    onClick={handleToggleDevelopersMode}
-                    style={{ padding: "10px 20px", cursor: "pointer" }}
-                  >
-                    {developerMode
-                      ? "Disable Developer Mode"
-                      : "Enable Developer Mode"}
-                  </div>
                   <div
                     onClick={handleNavigateToProfile}
                     style={{ padding: "10px 20px", cursor: "pointer" }}
@@ -775,7 +801,7 @@ const HomePage = () => {
                     <span>{poi.description}</span>
                     <br />
                     <em>Type: {poi.type}</em>
-                    {developerMode && (
+                    {user && user.admin && (
                       <div style={{ marginTop: "5px" }}>
                         <button
                           onClick={() => handleEditPOI(poi)}
@@ -901,7 +927,7 @@ const HomePage = () => {
               </form>
             </div>
           )}
-          {developerMode && !editingPOI && (
+          {user && user.admin && !editingPOI && (
             <div>
               <h3
                 style={{
@@ -989,7 +1015,7 @@ const HomePage = () => {
               </form>
             </div>
           )}
-          {developerMode && (
+          {user && user.admin && (
             <button
               onClick={() =>
                 handleDeleteBuilding(
@@ -1013,7 +1039,7 @@ const HomePage = () => {
           )}
         </div>
       )}
-      {developerMode && (
+      {user && user.admin && (
         <div
           style={{
             position: "absolute",
