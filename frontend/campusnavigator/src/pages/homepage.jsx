@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaSearch, FaPlus } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -78,6 +78,7 @@ const HomePage = () => {
       navigate("/login");
     } else {
       setUser(userData);
+      console.log("Logged-in user:", userData);
     }
   }, [navigate]);
 
@@ -90,8 +91,13 @@ const HomePage = () => {
       .catch((error) => console.error("Error fetching buildings:", error));
   }, []);
 
+  // useEffect to fetch geolocation data
   useEffect(() => {
     if (user) {
+      // Reset user-related state variables
+      setUserGeolocationId(null);
+      setUserLocation({ latitude: 0, longitude: 0 });
+
       // Fetch geolocation data for the current user
       fetch(
         `http://localhost:8080/api/geolocation/getGeolocationByUser/${user.userID}`
@@ -118,6 +124,7 @@ const HomePage = () => {
             )
               .then((postResponse) => postResponse.json())
               .then((newGeo) => {
+                console.log("Created new geolocation:", newGeo);
                 setUserLocation({
                   latitude: newGeo.latitude,
                   longitude: newGeo.longitude,
@@ -130,6 +137,7 @@ const HomePage = () => {
         })
         .then((data) => {
           if (data) {
+            console.log("Fetched geolocation data:", data);
             setUserLocation({
               latitude: data.latitude,
               longitude: data.longitude,
@@ -140,6 +148,10 @@ const HomePage = () => {
         .catch((error) =>
           console.error("Error fetching or creating user geolocation:", error)
         );
+    } else {
+      // If user is null, reset state variables
+      setUserGeolocationId(null);
+      setUserLocation({ latitude: 0, longitude: 0 });
     }
   }, [user]);
 
@@ -263,35 +275,44 @@ const HomePage = () => {
     setNewBuildingPosition(null);
   };
 
-  const handleMapClick = (e) => {
-    if (addingBuilding) {
-      setNewBuildingPosition(e.latlng);
-      setAddingBuilding(false);
-    } else if (updatingGeolocation) {
-      const data = {
-        latitude: e.latlng.lat,
-        longitude: e.latlng.lng,
-        timestamp: new Date().toISOString(), // Corrected property name
-        userID: user.userID,
-      };
-      fetch(
-        `http://localhost:8080/api/geolocation/putGeolocation/${userGeolocationId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        }
-      )
-        .then(() => {
-          setUserLocation({
-            latitude: data.latitude,
-            longitude: data.longitude,
-          });
-          setUpdatingGeolocation(false);
-        })
-        .catch((error) => console.error("Error updating geolocation:", error));
-    }
-  };
+  // Handle map click with useCallback
+  const handleMapClick = useCallback(
+    (e) => {
+      console.log("handleMapClick - user:", user);
+      if (addingBuilding) {
+        setNewBuildingPosition(e.latlng);
+        setAddingBuilding(false);
+      } else if (updatingGeolocation) {
+        const data = {
+          latitude: e.latlng.lat,
+          longitude: e.latlng.lng,
+          timestamp: new Date().toISOString(),
+          userID: user.userID,
+        };
+        fetch(
+          `http://localhost:8080/api/geolocation/putGeolocation/${userGeolocationId}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          }
+        )
+          .then((response) => response.json())
+          .then((updatedGeo) => {
+            console.log("Updated geolocation data:", updatedGeo);
+            setUserLocation({
+              latitude: data.latitude,
+              longitude: data.longitude,
+            });
+            setUpdatingGeolocation(false);
+          })
+          .catch((error) =>
+            console.error("Error updating geolocation:", error)
+          );
+      }
+    },
+    [addingBuilding, updatingGeolocation, user, userGeolocationId]
+  );
 
   const handleNewBuildingChange = (e) => {
     const { name, value } = e.target;
@@ -551,16 +572,16 @@ const HomePage = () => {
           <div style={{ display: "flex", alignItems: "center" }}>
             {/* Navigation Links */}
             <a
-            href="/detail"
-            style={{
-              color: '#FFFFFF',
-              marginRight: '30px',
-              textDecoration: 'none',
-              fontSize: '16px',
-            }}
-          >
-            Campus Building
-          </a>
+              href="/detail"
+              style={{
+                color: "#FFFFFF",
+                marginRight: "30px",
+                textDecoration: "none",
+                fontSize: "16px",
+              }}
+            >
+              Campus Building
+            </a>
             <a
               href="/event"
               style={{
@@ -595,7 +616,7 @@ const HomePage = () => {
               Announcement
             </a>
             {/* Notifications */}
-           
+
             <div style={{ marginRight: "20px", cursor: "pointer" }}>
               <a href="/notifications" style={{ color: "#FFFFFF" }}>
                 <FaBell size={24} />
