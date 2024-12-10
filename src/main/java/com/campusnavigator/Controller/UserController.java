@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,7 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 
 @RestController
-@RequestMapping(method = RequestMethod.GET,path="/api/user")
+@RequestMapping("/api/user")
 @CrossOrigin
 public class UserController {
 
@@ -46,11 +45,10 @@ public class UserController {
         return userv.getAllUser();
     }
     //update
-    @PutMapping("/putUserRecord")
-    public User putUserHistory(@RequestParam int userID, @RequestBody User newUser)
-    {
+    @PutMapping("/putUserRecord/{userID}")  // Changed to match your frontend request
+    public User updateUser(@PathVariable int userID, @RequestBody User newUser) {
         return userv.putUser(userID, newUser);
-    }    
+    }
     //delete
     @DeleteMapping("/deleteUser/{userID}")
     public String deleteUser(@PathVariable int userID)
