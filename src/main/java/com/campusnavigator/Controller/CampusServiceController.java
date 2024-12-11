@@ -11,43 +11,48 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.campusnavigator.Entity.CampusService;
 import com.campusnavigator.Service.CampusServiceService;
 
 @RestController
-@RequestMapping(method = RequestMethod.GET, path = "/api/campusservice")
+@RequestMapping("/api/campusservice") // Simplified mapping
 @CrossOrigin
 public class CampusServiceController {
 
     @Autowired
-    CampusServiceService cserv;
+    private CampusServiceService campusServiceService;
 
+    // Test API to verify the controller is working
     @GetMapping("/print")
     public String print() {
         return "Campus Service API is working!";
     }
 
-    @PostMapping("/postCampusService")
-    public CampusService postCampusService(@RequestBody CampusService campusService) {
-        return cserv.postCampusService(campusService);
+    // Create a new CampusService
+    @PostMapping
+    public CampusService createCampusService(@RequestBody CampusService campusService) {
+        return campusServiceService.postCampusService(campusService); // Use the correct method name
     }
 
-    @GetMapping("/getAllCampusServices")
+    // Retrieve all CampusServices
+    @GetMapping
     public List<CampusService> getAllCampusServices() {
-        return cserv.getAllCampusServices();
+        return campusServiceService.getAllCampusServices();
     }
 
-    @PutMapping("/putCampusService")
-    public CampusService putCampusService(@RequestParam int serviceID, @RequestBody CampusService newCampusService) {
-        return cserv.putCampusService(serviceID, newCampusService);
+    // Update an existing CampusService
+    @PutMapping("/{serviceID}")
+    public CampusService updateCampusService(
+            @PathVariable int serviceID, 
+            @RequestBody CampusService updatedCampusService) {
+        return campusServiceService.putCampusService(serviceID, updatedCampusService); // Use the correct method name
     }
 
-    @DeleteMapping("/deleteCampusService/{serviceID}")
+    // Delete a CampusService
+    @DeleteMapping("/{serviceID}")
     public String deleteCampusService(@PathVariable int serviceID) {
-        return cserv.deleteCampusService(serviceID);
+        return campusServiceService.deleteCampusService(serviceID);
     }
 }

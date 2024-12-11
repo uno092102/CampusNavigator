@@ -607,7 +607,7 @@ const HomePage = () => {
               Calendar
             </a>
             <a
-              href="#"
+              href="/campusservice"
               style={{
                 color: "#FFFFFF",
                 marginRight: "30px",
@@ -616,6 +616,17 @@ const HomePage = () => {
               }}
             >
               Service
+            </a>
+            <a
+              href="/incidentreport"
+              style={{
+                color: "#FFFFFF",
+                marginRight: "30px",
+                textDecoration: "none",
+                fontSize: "16px",
+              }}
+            >
+              IncidentReport 
             </a>
             <a
               href="/announcement"
