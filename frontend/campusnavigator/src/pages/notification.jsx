@@ -48,7 +48,7 @@ const Notifications = () => {
 
           // Handle event notifications
     for (const event of eventsResponse.data) {
-        const eventMessage = `New event "${event.name}" has been created for ${event.date}.`;
+        const eventMessage = `New event "${event.name}" has been created.`;
         if (!existingMessages.includes(eventMessage)) {
           await axios.post('http://localhost:8080/api/notifications', eventMessage, {
             headers: {
