@@ -14,98 +14,185 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [buildings, setBuildings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showUnreadOnly, setShowUnreadOnly] = useState(true);
+  
+  const [deletedNotificationIds, setDeletedNotificationIds] = useState(() => {
+  const stored = localStorage.getItem('deletedNotificationIds');
 
-  const createNotification = async (message) => {
-    try {
-      const notification = {
-        message: message,
-        timestamp: new Date().toISOString(),
-        isRead: false
-      };
-      await axios.post('http://localhost:8080/api/notifications', notification);
-    } catch (error) {
-      console.error('Error creating notification:', error);
-    }
-  };
-
+  
+    return stored ? JSON.parse(stored) : [];
+  });
   useEffect(() => {
     const fetchBuildingsAndNotifications = async () => {
       try {
-        // Fetch buildings data
         const buildingsResponse = await axios.get('http://localhost:8080/api/buildings');
-        
-        // Create notifications for existing buildings
-        await Promise.all(
-          buildingsResponse.data.map(building => 
-            createNotification(`A new building named "${building.name}" has been added to the system.`)
-          )
-        );
-
         setBuildings(buildingsResponse.data);
+        const eventsResponse = await axios.get('http://127.0.0.1:8080/api/event/getAllEvents');
+    setBuildings(buildingsResponse.data);
+    const poisResponse = await axios.get('http://localhost:8080/api/pois');
+    setBuildings(buildingsResponse.data);
 
-        // Fetch notifications
-        const notificationsResponse = await axios.get('http://localhost:8080/api/notifications');
-        setNotifications(notificationsResponse.data.sort((a, b) => 
-          new Date(b.timestamp) - new Date(a.timestamp)
-        ));
+        
 
+        const existingNotifications = await axios.get('http://localhost:8080/api/notifications');
+        const existingMessages = existingNotifications.data.map(n => n.message);
+  
+        for (const building of buildingsResponse.data) {
+          const message = `Building "${building.name}" has been added.`;
+          if (!existingMessages.includes(message)) {
+            await axios.post('http://localhost:8080/api/notifications', message, {
+              headers: {
+                'Content-Type': 'text/plain'
+              }
+            });
+          }
+        }
+
+          // Handle event notifications
+    for (const event of eventsResponse.data) {
+        const eventMessage = `New event "${event.name}" has been created for ${event.date}.`;
+        if (!existingMessages.includes(eventMessage)) {
+          await axios.post('http://localhost:8080/api/notifications', eventMessage, {
+            headers: {
+              'Content-Type': 'text/plain'
+            }
+          });
+        }
+      }
+
+      
+    // Handle POI notifications
+    for (const poi of poisResponse.data) {
+        const poiMessage = `New point of interest "${poi.name}" has been added to a building.`;
+        if (!existingMessages.includes(poiMessage)) {
+          await axios.post('http://localhost:8080/api/notifications', poiMessage, {
+            headers: {
+              'Content-Type': 'text/plain'
+            }
+          });
+        }
+      }
+  
+
+        const filteredNotifications = existingNotifications.data
+          .filter(notification => 
+            !deletedNotificationIds.includes(notification.notificationId) &&
+            !notification.isRead
+          )
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        setNotifications(filteredNotifications);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching data:', error);
         setLoading(false);
       }
     };
+  
+    
+    
+    const handleBuildingDelete = async (buildingId, buildingName) => {
+        try {
+          // Delete the building
+          await axios.delete(`http://localhost:8080/api/buildings/${buildingId}`);
+          
+          // Create notification for building deletion
+          const deletionMessage = `Building "${buildingName}" has been deleted.`;
+          await axios.post('http://localhost:8080/api/notifications', deletionMessage, {
+            headers: {
+              'Content-Type': 'text/plain'
+            }
+          });
+      
+          // Refresh notifications list
+          const response = await axios.get('http://localhost:8080/api/notifications');
+          const filteredNotifications = response.data
+            .filter(notification => !deletedNotificationIds.includes(notification.notificationId) && !notification.isRead)
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+          
+          setNotifications(filteredNotifications);
+          
+        } catch (error) {
+          console.error('Error handling building deletion:', error);
+        }
+      };
+
+      
 
     fetchBuildingsAndNotifications();
+  }, [deletedNotificationIds]);
 
-    // Set up a WebSocket or polling mechanism to track building changes in real-time
-    const checkBuildingChanges = async () => {
-      try {
-        const currentBuildings = await axios.get('http://localhost:8080/api/buildings');
-        
-        // Check for deleted buildings
-        buildings.forEach(async (existingBuilding) => {
-          const stillExists = currentBuildings.data.some(b => b.id === existingBuilding.id);
-          if (!stillExists) {
-            await createNotification(`Building "${existingBuilding.name}" has been deleted from the system.`);
-          }
-        });
-
-        // Update buildings state
-        setBuildings(currentBuildings.data);
-      } catch (error) {
-        console.error('Error checking building changes:', error);
-      }
-    };
-
-    // Poll for changes every 5 minutes
-    const intervalId = setInterval(checkBuildingChanges, 5 * 60 * 1000);
-
-    // Clean up interval on component unmount
-    return () => clearInterval(intervalId);
-  }, []);
-
-  const markAsRead = async (notificationId) => {
+  const deleteAllNotifications = async () => {
     try {
-      await axios.put(`http://localhost:8080/api/notifications/${notificationId}/read`);
-      const response = await axios.get('http://localhost:8080/api/notifications');
-      setNotifications(response.data.sort((a, b) => 
-        new Date(b.timestamp) - new Date(a.timestamp)
-      ));
+      const deletionPromises = notifications.map(notification => 
+        axios.delete(`http://localhost:8080/api/notifications/${notification.notificationId}`)
+      );
+      
+      const results = await Promise.allSettled(deletionPromises);
+      const successfulDeletions = results
+        .filter(result => result.status === 'fulfilled')
+        .map((result, index) => notifications[index].notificationId);
+      
+      const updatedDeletedIds = [...deletedNotificationIds, ...successfulDeletions];
+      setDeletedNotificationIds(updatedDeletedIds);
+      localStorage.setItem('deletedNotificationIds', JSON.stringify(updatedDeletedIds));
+      
+      setNotifications([]);
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      console.error('Error deleting all notifications:', error);
     }
   };
 
   const deleteNotification = async (notificationId) => {
     try {
       await axios.delete(`http://localhost:8080/api/notifications/${notificationId}`);
-      const response = await axios.get('http://localhost:8080/api/notifications');
-      setNotifications(response.data.sort((a, b) => 
-        new Date(b.timestamp) - new Date(a.timestamp)
-      ));
+      
+      const updatedDeletedIds = [...deletedNotificationIds, notificationId];
+      setDeletedNotificationIds(updatedDeletedIds);
+      localStorage.setItem('deletedNotificationIds', JSON.stringify(updatedDeletedIds));
+      
+      setNotifications(notifications.filter(n => n.notificationId !== notificationId));
     } catch (error) {
       console.error('Error deleting notification:', error);
+    }
+  };
+
+  
+
+  // Modify the markAsRead function
+const markAsRead = async (notificationId) => {
+    try {
+      await axios.put(`http://localhost:8080/api/notifications/${notificationId}/read`);
+      // Update the notification in the current state
+      setNotifications(notifications.filter(n => n.notificationId !== notificationId));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const handleBuildingDelete = async (buildingId, buildingName) => {
+    try {
+      // Delete the building
+      await axios.delete(`http://localhost:8080/api/buildings/${buildingId}`);
+      
+      // Create notification for building deletion
+      const deletionMessage = `Building "${buildingName}" has been deleted.`;
+      await axios.post('http://localhost:8080/api/notifications', deletionMessage, {
+        headers: {
+          'Content-Type': 'text/plain'
+        }
+      });
+  
+      // Refresh notifications list
+      const response = await axios.get('http://localhost:8080/api/notifications');
+      const filteredNotifications = response.data
+        .filter(notification => !deletedNotificationIds.includes(notification.notificationId) && !notification.isRead)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      
+      setNotifications(filteredNotifications);
+      
+    } catch (error) {
+      console.error('Error handling building deletion:', error);
     }
   };
 
@@ -129,93 +216,154 @@ const Notifications = () => {
 
   return (
     <div>
-      <header style={{
+    {/* Header Component */}
+    <header
+      style={{
         position: "relative",
         backgroundColor: "#7757FF",
         color: "#FFFFFF",
         padding: "20px 40px",
         boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
         zIndex: 1000,
-      }}>
-        <div style={{
+      }}
+    >
+      <div
+        style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-        }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <Link to="/homepage">
-              <img
-                src="/logoimg/Logodark.svg"
-                alt="Logo"
-                style={{ width: "240px", marginRight: "20px" }}
-              />
-            </Link>
-            <form style={{ position: "relative" }} ref={searchRef}>
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                style={{
-                  width: "300px",
-                  padding: "8px 12px 8px 40px",
-                  borderRadius: "20px",
-                  border: "none",
-                  backgroundColor: "#FFFFFF",
-                  color: "#7757FF",
-                  fontSize: "16px",
-                }}
-              />
-              <FaSearch
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "12px",
-                  transform: "translateY(-50%)",
-                  color: "#7757FF",
-                }}
-              />
-            </form>
+        }}
+      >
+        {/* Logo and Search */}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {/* Logo */}
+          <Link to="/homepage">
+            <img
+              src="/logoimg/Logodark.svg"
+              alt="Logo"
+              style={{ width: "240px", marginRight: "20px" }}
+            />
+          </Link>
+          {/* Search Form */}
+          <form style={{ position: "relative" }} ref={searchRef}>
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{
+                width: "300px",
+                padding: "8px 12px 8px 40px",
+                borderRadius: "20px",
+                border: "none",
+                backgroundColor: "#FFFFFF",
+                color: "#7757FF",
+                fontSize: "16px",
+              }}
+            />
+            <FaSearch
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "12px",
+                transform: "translateY(-50%)",
+                color: "#7757FF",
+              }}
+            />
+          </form>
+        </div>
+        {/* Navigation Links and User Profile */}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {/* Navigation Links */}
+          <a
+            href="/detail"
+            style={{
+              color: "#FFFFFF",
+              marginRight: "30px",
+              textDecoration: "none",
+              fontSize: "16px",
+            }}
+          >
+            Building
+          </a>
+          <a
+            href="/event"
+            style={{
+              color: "#FFFFFF",
+              marginRight: "30px",
+              textDecoration: "none",
+              fontSize: "16px",
+            }}
+          >
+            Calendar
+          </a>
+          <a
+            href="/campusservice"
+            style={{
+              color: "#FFFFFF",
+              marginRight: "30px",
+              textDecoration: "none",
+              fontSize: "16px",
+            }}
+          >
+            Service
+          </a>
+          <a
+            href="/incidentreport"
+            style={{
+              color: "#FFFFFF",
+              marginRight: "30px",
+              textDecoration: "none",
+              fontSize: "16px",
+            }}
+          >
+            Incident Report
+          </a>
+          <a
+            href="/announcement"
+            style={{
+              color: "#FFFFFF",
+              marginRight: "30px",
+              textDecoration: "none",
+              fontSize: "16px",
+            }}
+          >
+            Announcement
+          </a>
+          {/* Notifications */}
+          <div style={{ marginRight: "20px", cursor: "pointer" }}>
+            <a href="/notifications" style={{ color: "#FFFFFF" }}>
+              <FaBell size={24} />
+            </a>
           </div>
-
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <a href="/detail" style={{ color: '#FFFFFF', marginRight: '30px', textDecoration: 'none', fontSize: '16px' }}>
-              Building
-            </a>
-            <a href="/event" style={{ color: "#FFFFFF", marginRight: "30px", textDecoration: "none", fontSize: "16px" }}>
-              Calendar
-            </a>
-            <a href="#" style={{ color: "#FFFFFF", marginRight: "30px", textDecoration: "none", fontSize: "16px" }}>
-              Service
-            </a>
-            <a href="/announcement" style={{ color: "#FFFFFF", marginRight: "30px", textDecoration: "none", fontSize: "16px" }}>
-              Announcement
-            </a>
-            
-            <div style={{ marginRight: "20px", cursor: "pointer" }}>
-              <a href="/notifications" style={{ color: "#FFFFFF" }}>
-                <FaBell size={24} />
-              </a>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
-              <img
-                src="https://picsum.photos/200/300"
-                alt="User Profile"
+          {/* User Profile Dropdown */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              position: "relative",
+            }}
+          >
+            <img
+              src="https://picsum.photos/200/300"
+              alt="User Profile"
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                marginRight: "10px",
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                setDropdownOpen(!dropdownOpen);
+              }}
+            />
+            <span style={{ marginRight: "10px" }}>
+              {user ? user.name : ""}
+            </span>
+            {dropdownOpen && (
+              <div
                 style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  marginRight: "10px",
-                  cursor: "pointer",
-                }}
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-              />
-              <span style={{ marginRight: "10px" }}>
-                {user ? user.name : ""}
-              </span>
-              {dropdownOpen && (
-                <div style={{
                   position: "absolute",
                   top: "60px",
                   right: "0",
@@ -226,29 +374,56 @@ const Notifications = () => {
                   overflow: "hidden",
                   zIndex: 1001,
                   minWidth: "200px",
-                }}>
-                  <div onClick={handleNavigateToProfile} style={{ padding: "10px 20px", cursor: "pointer" }}>
-                    Profile
-                  </div>
-                  <div style={{ padding: "10px 20px", cursor: "pointer" }}>
-                    Help
-                  </div>
-                  <div onClick={handleFeedback} style={{ padding: "10px 20px", cursor: "pointer" }}>
-                    Feedback
-                  </div>
-                  <div onClick={handleLogout} style={{ padding: "10px 20px", cursor: "pointer" }}>
-                    Logout
-                  </div>
+                }}
+              >
+                <div
+                  onClick={handleNavigateToProfile}
+                  style={{ padding: "10px 20px", cursor: "pointer" }}
+                >
+                  Profile
                 </div>
-              )}
-            </div>
+                <div style={{ padding: "10px 20px", cursor: "pointer" }}>
+                  Help
+                </div>
+                <div
+                  onClick={handleFeedback}
+                  style={{ padding: "10px 20px", cursor: "pointer" }}
+                >
+                  Feedback
+                </div>
+                <div
+                  onClick={handleLogout}
+                  style={{ padding: "10px 20px", cursor: "pointer" }}
+                >
+                  Logout
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </header>
+      </div>
+    </header>
 
       <div className="notifications-container">
         <div className="notifications-header">
           <h2>Notifications</h2>
+          {notifications.length > 0 && (
+            <button 
+              onClick={deleteAllNotifications}
+              className="delete-all-btn"
+              style={{
+                backgroundColor: "#ff4444",
+                color: "white",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: "4px",
+                cursor: "pointer",
+                marginLeft: "20px"
+              }}
+            >
+              Delete All
+            </button>
+          )}
         </div>
 
         <div className="notifications-list">
