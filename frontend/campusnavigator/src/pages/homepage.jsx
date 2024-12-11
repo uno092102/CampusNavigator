@@ -626,7 +626,7 @@ const HomePage = () => {
                 fontSize: "16px",
               }}
             >
-              IncidentReport 
+              Incident Report 
             </a>
             <a
               href="/announcement"
