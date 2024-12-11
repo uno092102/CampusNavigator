@@ -1,9 +1,7 @@
 package com.campusnavigator.Service;
 
 import com.campusnavigator.Entity.Notification;
-import com.campusnavigator.Entity.User;
 import com.campusnavigator.Repository.NotificationRepository;
-import com.campusnavigator.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,75 +11,40 @@ import java.util.Optional;
 
 @Service
 public class NotificationService {
-
     @Autowired
     private NotificationRepository notificationRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    // Create a new notification for a user
-    public Notification createNotification(int userID, String message) {
-        Optional<User> userOptional = userRepository.findById(userID);
-        
-        if (userOptional.isPresent()) {
-            Notification notification = new Notification();
-            notification.setUser(userOptional.get());
-            notification.setMessage(message);
-            notification.setTimestamp(LocalDateTime.now());
-            notification.setIsRead(false);
-            
-            return notificationRepository.save(notification);
-        }
-        
-        throw new RuntimeException("User not found with ID: " + userID);
+    public Notification createNotification(String message) {
+        Notification notification = new Notification();
+        notification.setMessage(message);
+        notification.setTimestamp(LocalDateTime.now());
+        notification.setIsRead(false);
+        return notificationRepository.save(notification);
     }
 
-    // Get all notifications for a specific user
-    public List<Notification> getUserNotifications(int userID) {
-        return notificationRepository.findByUser_UserID(userID);
+    public List<Notification> getAllNotifications() {
+        return notificationRepository.findAll();
     }
 
-    // Get unread notifications for a specific user
-    public List<Notification> getUnreadNotifications(int userID) {
-        return notificationRepository.findByUser_UserIDAndIsReadFalse(userID);
+    public List<Notification> getUnreadNotifications() {
+        return notificationRepository.findByIsReadFalse();
     }
 
-    // Count unread notifications for a user
-    public long countUnreadNotifications(int userID) {
-        return notificationRepository.countByUser_UserIDAndIsReadFalse(userID);
+    public Optional<Notification> getNotificationById(Long id) {
+        return notificationRepository.findById(id);
     }
 
-    // Mark a specific notification as read
-    public Notification markNotificationAsRead(Long notificationID) {
-        Optional<Notification> notificationOptional = notificationRepository.findById(notificationID);
-        
-        if (notificationOptional.isPresent()) {
-            Notification notification = notificationOptional.get();
+    public Notification markAsRead(Long id) {
+        Optional<Notification> optionalNotification = notificationRepository.findById(id);
+        if (optionalNotification.isPresent()) {
+            Notification notification = optionalNotification.get();
             notification.setIsRead(true);
             return notificationRepository.save(notification);
         }
-        
-        throw new RuntimeException("Notification not found with ID: " + notificationID);
+        return null;
     }
 
-    // Mark all notifications for a user as read
-    public void markAllNotificationsAsRead(int userID) {
-        List<Notification> unreadNotifications = notificationRepository.findByUser_UserIDAndIsReadFalse(userID);
-        
-        for (Notification notification : unreadNotifications) {
-            notification.setIsRead(true);
-        }
-        
-        notificationRepository.saveAll(unreadNotifications);
-    }
-
-    // Delete a specific notification
-    public void deleteNotification(Long notificationID) {
-        if (notificationRepository.existsById(notificationID)) {
-            notificationRepository.deleteById(notificationID);
-        } else {
-            throw new RuntimeException("Notification not found with ID: " + notificationID);
-        }
+    public void deleteNotification(Long id) {
+        notificationRepository.deleteById(id);
     }
 }

@@ -4,43 +4,32 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "notifications")
+@Table(name = "Notification")
 public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long notificationID;
+    @Column(name = "NotificationID")
+    private Long notificationId;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "Message", columnDefinition = "TEXT")
     private String message;
 
-    @Column(nullable = false)
+    @Column(name = "Timestamp")
     private LocalDateTime timestamp;
 
-    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Column(name = "IsRead")
     private Boolean isRead = false;
 
-    // Default constructor
+    // Constructors
     public Notification() {}
 
     // Getters and Setters
-    public Long getNotificationID() {
-        return notificationID;
+    public Long getNotificationId() {
+        return notificationId;
     }
 
-    public void setNotificationID(Long notificationID) {
-        this.notificationID = notificationID;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
+    public void setNotificationId(Long notificationId) {
+        this.notificationId = notificationId;
     }
 
     public String getMessage() {
