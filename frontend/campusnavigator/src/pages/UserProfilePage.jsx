@@ -792,7 +792,7 @@ function UserProfilePage() {
             }}
           >
             <h2 style={{ color: "#7757FF", marginBottom: "20px" }}>
-              Feedback Submitted (Kang BRENT)
+              Feedback Submitted
             </h2>
             {/* List of feedback messages (placeholder data) */}
             <ul style={{ listStyleType: "none", padding: 0 }}>
