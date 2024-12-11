@@ -29,9 +29,7 @@ const Notifications = () => {
         setBuildings(buildingsResponse.data);
         const eventsResponse = await axios.get('http://127.0.0.1:8080/api/event/getAllEvents');
     setBuildings(buildingsResponse.data);
-    const poisResponse = await axios.get('http://localhost:8080/api/pois');
-    setBuildings(buildingsResponse.data);
-
+    
         
 
         const existingNotifications = await axios.get('http://localhost:8080/api/notifications');
@@ -60,18 +58,7 @@ const Notifications = () => {
         }
       }
 
-      
-    // Handle POI notifications
-    for (const poi of poisResponse.data) {
-        const poiMessage = `New point of interest "${poi.name}" has been added to a building.`;
-        if (!existingMessages.includes(poiMessage)) {
-          await axios.post('http://localhost:8080/api/notifications', poiMessage, {
-            headers: {
-              'Content-Type': 'text/plain'
-            }
-          });
-        }
-      }
+     
   
 
         const filteredNotifications = existingNotifications.data
