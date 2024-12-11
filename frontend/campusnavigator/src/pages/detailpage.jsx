@@ -188,49 +188,60 @@ const Header = () => {
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {/* Navigation Links */}
           <a
-            href="/detail"
-            style={{
-              color: '#FFFFFF',
-              marginRight: '30px',
-              textDecoration: 'none',
-              fontSize: '16px',
-            }}
-          >
-            Building
-          </a>
-          <a
-            href="/event"
-            style={{
-              color: '#FFFFFF',
-              marginRight: '30px',
-              textDecoration: 'none',
-              fontSize: '16px',
-            }}
-          >
-            Calendar
-          </a>
-          <a
-            href="#"
-            style={{
-              color: '#FFFFFF',
-              marginRight: '30px',
-              textDecoration: 'none',
-              fontSize: '16px',
-            }}
-          >
-            Service
-          </a>
-          <a
-            href="/announcement"
-            style={{
-              color: '#FFFFFF',
-              marginRight: '30px',
-              textDecoration: 'none',
-              fontSize: '16px',
-            }}
-          >
-            Announcement
-          </a>
+              href="/detail"
+              style={{
+                color: "#FFFFFF",
+                marginRight: "30px",
+                textDecoration: "none",
+                fontSize: "16px",
+              }}
+            >
+              Building
+            </a>
+            <a
+              href="/event"
+              style={{
+                color: "#FFFFFF",
+                marginRight: "30px",
+                textDecoration: "none",
+                fontSize: "16px",
+              }}
+            >
+              Calendar
+            </a>
+            <a
+              href="/campusservice"
+              style={{
+                color: "#FFFFFF",
+                marginRight: "30px",
+                textDecoration: "none",
+                fontSize: "16px",
+              }}
+            >
+              Service
+            </a>
+            <a
+              href="/incidentreport"
+              style={{
+                color: "#FFFFFF",
+                marginRight: "30px",
+                textDecoration: "none",
+                fontSize: "16px",
+              }}
+            >
+              Incident Report 
+            </a>
+            <a
+              href="/announcement"
+              style={{
+                color: "#FFFFFF",
+                marginRight: "30px",
+                textDecoration: "none",
+                fontSize: "16px",
+              }}
+            >
+              Announcement
+            </a>
           {/* Notifications */}
           <div style={{ marginRight: '20px', cursor: 'pointer' }}>
             <a href="/notifications" style={{ color: '#FFFFFF' }}>

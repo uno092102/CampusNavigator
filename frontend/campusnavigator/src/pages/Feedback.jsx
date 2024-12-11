@@ -222,8 +222,8 @@ const FeedbackForm = () => {
           {/* Navigation Links and User Profile */}
           <div style={{ display: "flex", alignItems: "center" }}>
             {/* Navigation Links */}
-            <Link
-              to="/detail"
+            <a
+              href="/detail"
               style={{
                 color: "#FFFFFF",
                 marginRight: "30px",
@@ -232,9 +232,9 @@ const FeedbackForm = () => {
               }}
             >
               Building
-            </Link>
-            <Link
-              to="/event"
+            </a>
+            <a
+              href="/event"
               style={{
                 color: "#FFFFFF",
                 marginRight: "30px",
@@ -243,9 +243,9 @@ const FeedbackForm = () => {
               }}
             >
               Calendar
-            </Link>
+            </a>
             <a
-              href="#"
+              href="/campusservice"
               style={{
                 color: "#FFFFFF",
                 marginRight: "30px",
@@ -255,8 +255,19 @@ const FeedbackForm = () => {
             >
               Service
             </a>
-            <Link
-              to="/announcement"
+            <a
+              href="/incidentreport"
+              style={{
+                color: "#FFFFFF",
+                marginRight: "30px",
+                textDecoration: "none",
+                fontSize: "16px",
+              }}
+            >
+              Incident Report 
+            </a>
+            <a
+              href="/announcement"
               style={{
                 color: "#FFFFFF",
                 marginRight: "30px",
@@ -265,7 +276,7 @@ const FeedbackForm = () => {
               }}
             >
               Announcement
-            </Link>
+            </a>
             {/* Notifications */}
             <div style={{ marginRight: "20px", cursor: "pointer" }}>
               <Link to="/notifications" style={{ color: "#FFFFFF" }}>

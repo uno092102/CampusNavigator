@@ -241,6 +241,7 @@ function UserProfilePage() {
           </div>
           {/* Navigation Links */}
           <div style={{ display: "flex", alignItems: "center" }}>
+            {/* Navigation Links */}
             <a
               href="/detail"
               style={{
@@ -264,7 +265,7 @@ function UserProfilePage() {
               Calendar
             </a>
             <a
-              href="#"
+              href="/campusservice"
               style={{
                 color: "#FFFFFF",
                 marginRight: "30px",
@@ -273,6 +274,17 @@ function UserProfilePage() {
               }}
             >
               Service
+            </a>
+            <a
+              href="/incidentreport"
+              style={{
+                color: "#FFFFFF",
+                marginRight: "30px",
+                textDecoration: "none",
+                fontSize: "16px",
+              }}
+            >
+              Incident Report 
             </a>
             <a
               href="/announcement"
