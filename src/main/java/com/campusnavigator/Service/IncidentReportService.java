@@ -2,6 +2,7 @@ package com.campusnavigator.Service;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import javax.naming.NameNotFoundException;
 
@@ -30,24 +31,20 @@ public class IncidentReportService {
     }
 
     @SuppressWarnings("finally")
-    public IncidentReport putIncidentReport(int incidentID, IncidentReport newIncidentReport)
-    {
-        IncidentReport incidentReport = new IncidentReport();
+    public IncidentReport putIncidentReport(int incidentID, IncidentReport newIncidentReport) throws NameNotFoundException {
+        IncidentReport incidentReport = srepo.findByIncidentID(incidentID)
+                .orElseThrow(() -> new NameNotFoundException("Incident not found with ID: " + incidentID));
 
-        try {
-            incidentReport = srepo.findByIncidentID(incidentID).get();
+        // Update all fields
+        incidentReport.setCategory(newIncidentReport.getCategory());
+        incidentReport.setDescription(newIncidentReport.getDescription());
+        incidentReport.setLocationType(newIncidentReport.getLocationType());
+        incidentReport.setStatus(newIncidentReport.getStatus());
+        incidentReport.setTimestamp(newIncidentReport.getTimestamp());
 
-            incidentReport.setCategory(newIncidentReport.getCategory());
-
-            incidentReport.setDescription(newIncidentReport.getDescription());
-
-
-        } catch (NoSuchElementException nex) {
-            throw new NameNotFoundException(" " + incidentID + "");
-        } finally {
-            return srepo.save(incidentReport);
-        }
+        return srepo.save(incidentReport);
     }
+    
 
     public String deleteIncidentReport(int incidentID) {
         
