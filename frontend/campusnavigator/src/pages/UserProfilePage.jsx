@@ -1,25 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaSearch, FaBell } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom"; 
+import { Link, useNavigate } from "react-router-dom";
 
 function UserProfilePage() {
   const [searchText, setSearchText] = useState("");
   const [user, setUser] = useState(null);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState("")
-  const [searchResults] = useState([]); // Placeholder for search results
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showUpdateProfileForm, setShowUpdateProfileForm] = useState(false);
   const [showChangePasswordForm, setShowChangePasswordForm] = useState(false);
   const searchRef = useRef(null);
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
+  const [allUsersData, setAllUsersData] = useState([]); // Store all users' data from the API
+  const [currentUserGeolocations, setCurrentUserGeolocations] = useState([]); // Store current user's geolocation data
+  const [buildings, setBuildings] = useState([]); // Store buildings data
   const userData = JSON.parse(localStorage.getItem("user"));
-  console.log("User ID = " , userData.userID)
-  const userID = userData.userID
-  
-
+  console.log("User ID = ", userData.userID);
+  const userID = userData.userID;
 
   const userProf = {
     role: "Administrator", // Set to 'Administrator' to display managerial sections
@@ -35,6 +32,60 @@ function UserProfilePage() {
       setUser(userData);
     }
   }, [navigate]);
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/buildings")
+      .then((response) => response.json())
+      .then((data) => {
+        setBuildings(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching buildings data:", error);
+      });
+  }, []);
+
+  // Function to calculate distance between two coordinates in meters
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const toRadians = (degree) => (degree * Math.PI) / 180;
+
+    const R = 6371000; // Earth's radius in meters
+    const φ1 = toRadians(lat1);
+    const φ2 = toRadians(lat2);
+    const Δφ = toRadians(lat2 - lat1);
+    const Δλ = toRadians(lon2 - lon1);
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    const distance = R * c;
+
+    return distance; // in meters
+  };
+
+  useEffect(() => {
+    // Fetch all users' data from the API
+    fetch("http://127.0.0.1:8080/api/user/getAllSearch")
+      .then((response) => response.json())
+      .then((data) => {
+        setAllUsersData(data);
+
+        // Find the current user's data using userID
+        const currentUserData = data.find((user) => user.userID === userID);
+
+        // Check if currentUserData exists and has geolocationData
+        if (currentUserData && currentUserData.geolocationData) {
+          setCurrentUserGeolocations(currentUserData.geolocationData);
+        } else {
+          setCurrentUserGeolocations([]);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching geolocation data:", error);
+      });
+  }, [userID]);
 
   useEffect(() => {
     document.title = "User Profile - CampusNavigator";
@@ -60,8 +111,7 @@ function UserProfilePage() {
     {
       alert("Update User Profile Successfull!");
     })*/
-
-  }
+  };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -95,28 +145,29 @@ function UserProfilePage() {
   const handleCloseForms = () => {
     setShowUpdateProfileForm(false);
     setShowChangePasswordForm(false);
-
-
   };
 
   const handleSaveChanges = (e) => {
     e.preventDefault();
 
-    const newPassword = {password}
-    console.log(newPassword)
+    const newPassword = { password };
+    console.log(newPassword);
 
-    fetch(`http://localhost:8080/api/user/putUserRecord?userID=${userData.userID}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        password: password
-      })
-    }).then(() => {
+    fetch(
+      `http://localhost:8080/api/user/putUserRecord?userID=${userData.userID}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          password: password,
+        }),
+      }
+    ).then(() => {
       alert("Password successfully changed!");
-    })
-  }
+    });
+  };
 
   return (
     <div
@@ -193,10 +244,10 @@ function UserProfilePage() {
             <a
               href="/detail"
               style={{
-                color: '#FFFFFF',
-                marginRight: '30px',
-                textDecoration: 'none',
-                fontSize: '16px',
+                color: "#FFFFFF",
+                marginRight: "30px",
+                textDecoration: "none",
+                fontSize: "16px",
               }}
             >
               Building
@@ -343,7 +394,9 @@ function UserProfilePage() {
             }}
           />
           <div>
-            <h1 style={{ color: "#333", marginBottom: "10px" }}>{user ? user.name : ""}</h1>
+            <h1 style={{ color: "#333", marginBottom: "10px" }}>
+              {user ? user.name : ""}
+            </h1>
             <p style={{ margin: "5px 0" }}>
               <strong>Role:</strong> {userProf.role}
             </p>
@@ -357,7 +410,6 @@ function UserProfilePage() {
         <section
           style={{
             marginTop: "20px",
-            display: "grid",
             gridTemplateColumns: "1fr 1fr",
             gap: "30px",
           }}
@@ -372,7 +424,7 @@ function UserProfilePage() {
             }}
           >
             <h2 style={{ color: "#7757FF", marginBottom: "20px" }}>
-              Account Settings (Kang CLAIVE)
+              Account Settings
             </h2>
             <button
               onClick={handleShowChangePasswordForm}
@@ -388,7 +440,7 @@ function UserProfilePage() {
                 fontSize: "16px",
               }}
             >
-              Change Password (Kang CLAIVE)
+              Change Password
             </button>
             <button
               onClick={handleShowUpdateProfileForm}
@@ -403,7 +455,7 @@ function UserProfilePage() {
                 fontSize: "16px",
               }}
             >
-              Update Profile Information (Kang CLAIVE)
+              Update Profile Information
             </button>
 
             {/* Update Profile Form */}
@@ -537,7 +589,7 @@ function UserProfilePage() {
                       id="newPassword"
                       name="password"
                       value={password}
-                      onChange={(e)=> setPassword(e.target.value)}
+                      onChange={(e) => setPassword(e.target.value)}
                       style={{
                         width: "100%",
                         padding: "8px",
@@ -584,50 +636,6 @@ function UserProfilePage() {
               </div>
             )}
           </div>
-
-          {/* Notification Preferences */}
-          <div
-            style={{
-              backgroundColor: "#FFFFFF",
-              padding: "20px",
-              borderRadius: "8px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
-            <h2 style={{ color: "#7757FF", marginBottom: "20px" }}>
-              Notification Preferences (Kang MICHAEL)
-            </h2>
-            <form>
-              <div style={{ marginBottom: "15px" }}>
-                <input
-                  type="checkbox"
-                  id="emailNotifications"
-                  name="emailNotifications"
-                  defaultChecked
-                />
-                <label
-                  htmlFor="emailNotifications"
-                  style={{ marginLeft: "10px", fontSize: "16px" }}
-                >
-                  Email Notifications
-                </label>
-              </div>
-              <div style={{ marginBottom: "15px" }}>
-                <input
-                  type="checkbox"
-                  id="pushNotifications"
-                  name="pushNotifications"
-                  defaultChecked
-                />
-                <label
-                  htmlFor="pushNotifications"
-                  style={{ marginLeft: "10px", fontSize: "16px" }}
-                >
-                  Push Notifications
-                </label>
-              </div>
-            </form>
-          </div>
         </section>
 
         {/* Other Contents */}
@@ -635,40 +643,10 @@ function UserProfilePage() {
         <section
           style={{
             marginTop: "40px",
-            display: "grid",
             gridTemplateColumns: "1fr 1fr",
             gap: "30px",
           }}
         >
-          {/* Notifications */}
-          <div
-            style={{
-              backgroundColor: "#FFFFFF",
-              padding: "20px",
-              borderRadius: "8px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
-            <h2 style={{ color: "#7757FF", marginBottom: "20px" }}>
-              Notifications (Kang MICHAEL)
-            </h2>
-            {/* List of notifications (placeholder data) */}
-            <ul style={{ listStyleType: "none", padding: 0 }}>
-              <li style={{ marginBottom: "15px" }}>
-                <strong>New Announcement:</strong> Campus will be closed
-                tomorrow.
-                <br />
-                <em style={{ color: "#777" }}>Today at 9:00 AM</em>
-              </li>
-              <li>
-                <strong>Event Reminder:</strong> Seminar on Software Development
-                starts in 2 hours.
-                <br />
-                <em style={{ color: "#777" }}>Today at 8:00 AM</em>
-              </li>
-            </ul>
-          </div>
-
           {/* Search History */}
           <div
             style={{
@@ -679,7 +657,7 @@ function UserProfilePage() {
             }}
           >
             <h2 style={{ color: "#7757FF", marginBottom: "20px" }}>
-              Search History (Kang CLAIVE)
+              Search History
             </h2>
             {/* List of search queries (placeholder data) */}
             <ul style={{ listStyleType: "none", padding: 0 }}>
@@ -721,26 +699,75 @@ function UserProfilePage() {
             }}
           >
             <h2 style={{ color: "#7757FF", marginBottom: "20px" }}>
-              Recent Locations (Kang MATHLEE)
+              Recent Locations
             </h2>
-            {/* Placeholder data for recent locations */}
-            <ul style={{ listStyleType: "none", padding: 0 }}>
-              <li style={{ marginBottom: "15px" }}>
-                Latitude: 10.3157, Longitude: 123.8854
-                <br />
-                <em style={{ color: "#777" }}>Today at 10:00 AM</em>
-              </li>
-              <li style={{ marginBottom: "15px" }}>
-                Latitude: 10.3167, Longitude: 123.8864
-                <br />
-                <em style={{ color: "#777" }}>Yesterday at 4:00 PM</em>
-              </li>
-              <li>
-                Latitude: 10.3177, Longitude: 123.8874
-                <br />
-                <em style={{ color: "#777" }}>Two days ago at 2:30 PM</em>
-              </li>
-            </ul>
+            {/* Render geolocation data */}
+            {currentUserGeolocations.length > 0 ? (
+              <ul style={{ listStyleType: "none", padding: 0 }}>
+                {currentUserGeolocations.map((geo) => {
+                  // Find the nearest building
+                  let nearestBuilding = null;
+                  let minDistance = Infinity;
+
+                  buildings.forEach((building) => {
+                    const distance = calculateDistance(
+                      geo.latitude,
+                      geo.longitude,
+                      building.locationLatitude,
+                      building.locationLongitude
+                    );
+                    if (distance < minDistance) {
+                      minDistance = distance;
+                      nearestBuilding = building;
+                    }
+                  });
+
+                  // Format the date
+                  const formattedDate = new Intl.DateTimeFormat("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "numeric",
+                    second: "numeric",
+                    hour12: true,
+                  }).format(new Date(geo.timestamp));
+
+                  return (
+                    <li
+                      key={geo.geolocationID}
+                      style={{ marginBottom: "15px" }}
+                    >
+                      {nearestBuilding ? (
+                        <>
+                          <span>
+                            Located <strong>{minDistance.toFixed(2)}m</strong>{" "}
+                            from <strong>{nearestBuilding.name}</strong>
+                          </span>
+                          <br />
+                          <span>
+                            Coordinates: {geo.latitude}° N, {geo.longitude}° W
+                          </span>
+                          <br />
+                          <em style={{ color: "#777" }}>{formattedDate}</em>
+                        </>
+                      ) : (
+                        <>
+                          <span>
+                            Coordinates: {geo.latitude}° N, {geo.longitude}° W
+                          </span>
+                          <br />
+                          <em style={{ color: "#777" }}>{formattedDate}</em>
+                        </>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p>No recent locations found.</p>
+            )}
           </div>
 
           {/* Feedback Submitted */}
@@ -782,7 +809,7 @@ function UserProfilePage() {
             }}
           >
             <h2 style={{ color: "#7757FF", marginBottom: "20px" }}>
-              My Events (Kang MICHAEL)
+              My Events
             </h2>
             {/* Organized Events */}
             <div style={{ marginBottom: "20px" }}>
@@ -833,7 +860,7 @@ function UserProfilePage() {
               }}
             >
               <h2 style={{ color: "#7757FF", marginBottom: "20px" }}>
-                Managed Campus Services (Kang TERRENCE)
+                Managed Campus Services
               </h2>
               {/* Placeholder data for managed services */}
               <ul style={{ listStyleType: "none", padding: 0 }}>
@@ -864,7 +891,7 @@ function UserProfilePage() {
               }}
             >
               <h2 style={{ color: "#7757FF", marginBottom: "20px" }}>
-                Announcements Posted (Kang CLAIVE)
+                Announcements Posted
               </h2>
               {/* Placeholder data for announcements */}
               <ul style={{ listStyleType: "none", padding: 0 }}>
@@ -899,7 +926,7 @@ function UserProfilePage() {
             }}
           >
             <h2 style={{ color: "#7757FF", marginBottom: "20px" }}>
-              Incident Reports (Kang TERENCE)
+              Incident Reports
             </h2>
             {/* List of incident reports (placeholder data) */}
             <ul style={{ listStyleType: "none", padding: 0 }}>
