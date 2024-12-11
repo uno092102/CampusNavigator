@@ -97,7 +97,7 @@ const FeedbackForm = () => {
     }
   };
   const handleNavigateToProfile = () => {
-    navigate("/profile");
+    navigate("/userprofile");
   };
   const handleFeedback = () => {
     navigate("/feedback");
