@@ -12,6 +12,8 @@ import Userprofile from './pages/UserProfilePage';
 import Notification from './pages/notification';
 import Detail from './pages/detailpage';
 import Announcement from './pages/Announcement';
+import IncidentReportPage from './pages/incidentreport';
+import CampusServicePage from './pages/campusservice';
 
 // Import admin pages
 import AdminLogin from './pages/AdminLogin';
@@ -35,6 +37,9 @@ function App() {
       <Route path="/notifications" element={<Notification />} />
       <Route path="/detail" element={<Detail />} />
       <Route path="/announcement" element={<Announcement />} />
+      <Route path="/incidentreport" element={<IncidentReportPage />} />
+      <Route path="/campusservice" element={<CampusServicePage />} />
+
 
       {/* Admin Routes */}
       <Route path="/admin/login" element={<AdminLogin />} />

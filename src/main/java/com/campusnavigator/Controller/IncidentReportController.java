@@ -2,7 +2,11 @@ package com.campusnavigator.Controller;
 
 import java.util.List;
 
+import javax.naming.NameNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +23,8 @@ import com.campusnavigator.Entity.IncidentReport;
 import com.campusnavigator.Service.IncidentReportService;
 
 @RestController
-@RequestMapping(method = RequestMethod.GET,path = "/api/incidentreport")
-@CrossOrigin
+@RequestMapping("/api/incidentreport")
+@CrossOrigin(origins = "http://localhost:3000")
 public class IncidentReportController {
     
     @Autowired
@@ -43,10 +47,22 @@ public class IncidentReportController {
         return sserv.getAllIncidentReport();
     }
 
-    @PutMapping("/putIncidentReport")
-    public IncidentReport putIncidentReport(@RequestParam int incidentID, @RequestBody IncidentReport newIncidentReport) {
-        return sserv.putIncidentReport(incidentID, newIncidentReport);
+    @PutMapping("/putIncidentReport/{incidentID}")
+    public ResponseEntity<?> putIncidentReport(
+            @PathVariable int incidentID,
+            @RequestBody IncidentReport newIncidentReport) {
+        try {
+            // Ensure the service handles the update logic and existence validation
+            IncidentReport updatedReport = sserv.putIncidentReport(incidentID, newIncidentReport);
+            return ResponseEntity.ok(updatedReport); // Return the updated report on success
+        } catch (NameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Incident Report not found: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + e.getMessage());
+        }
     }
+
+
 
     @DeleteMapping("/deleteIncidentReport/{incidentID}")
     public String deleteIncidentReport(@PathVariable int incidentID)
