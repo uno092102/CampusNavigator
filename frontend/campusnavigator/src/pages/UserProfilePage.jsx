@@ -224,7 +224,7 @@ function UserProfilePage() {
               Service
             </a>
             <a
-              href="#"
+              href="/announcement"
               style={{
                 color: "#FFFFFF",
                 marginRight: "30px",

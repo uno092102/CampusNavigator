@@ -221,7 +221,7 @@ const Header = () => {
             Service
           </a>
           <a
-            href="#"
+            href="/announcement"
             style={{
               color: '#FFFFFF',
               marginRight: '30px',
@@ -518,31 +518,6 @@ const BuildingDetails = ({ building, buildings, onBack }) => {
             alt="POI Location"
             style={styles.poiImage}
           />
-
-          {/* Related Events */}
-          {/* Assuming events are part of the POI data */}
-          {selectedPOI.events && selectedPOI.events.length > 0 ? (
-            <>
-              <h3 style={styles.sectionHeader}>Related Events</h3>
-              <ul style={styles.eventsList}>
-                {selectedPOI.events.map((event) => (
-                  <li key={event.eventID} style={styles.eventItem}>
-                    {event.name}
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <p>No events associated with this POI.</p>
-          )}
-
-          {/* Back to POI List */}
-          <button
-            onClick={() => setSelectedPOI(null)}
-            style={styles.backButtonPOI}
-          >
-            &larr; Back to Points of Interest
-          </button>
         </div>
       )}
     </div>
