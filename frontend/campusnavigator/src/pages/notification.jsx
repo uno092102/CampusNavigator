@@ -2,308 +2,455 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { FaSearch, FaBell } from "react-icons/fa";
 import axios from 'axios';
-import moment from 'moment';
 import './notification.css';
 
-const BASE_URL = 'http://localhost:8080/api/notifications';
+const Notifications = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const searchRef = useRef(null);
+  
+  const [notifications, setNotifications] = useState([]);
+  const [buildings, setBuildings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showUnreadOnly, setShowUnreadOnly] = useState(true);
+  
+  const [deletedNotificationIds, setDeletedNotificationIds] = useState(() => {
+  const stored = localStorage.getItem('deletedNotificationIds');
 
-
-const Notification = () => {
-    const navigate = useNavigate();
+  
+    return stored ? JSON.parse(stored) : [];
+  });
+  useEffect(() => {
+    const fetchBuildingsAndNotifications = async () => {
+      try {
+        const buildingsResponse = await axios.get('http://localhost:8080/api/buildings');
+        setBuildings(buildingsResponse.data);
+        const eventsResponse = await axios.get('http://127.0.0.1:8080/api/event/getAllEvents');
+    setBuildings(buildingsResponse.data);
     
-    // States
-    const [user, setUser] = useState(null);
-    const [dropdownOpen, setDropdownOpen] = useState(false);
-    const [developerMode, setDeveloperMode] = useState(false);
-    const [searchText, setSearchText] = useState("");
-    const [notifications, setNotifications] = useState([]);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const searchRef = useRef(null);
+        
 
-    // Notification Handlers
-    const fetchNotifications = async (userId) => {
+        const existingNotifications = await axios.get('http://localhost:8080/api/notifications');
+        const existingMessages = existingNotifications.data.map(n => n.message);
+  
+        for (const building of buildingsResponse.data) {
+          const message = `Building "${building.name}" has been added.`;
+          if (!existingMessages.includes(message)) {
+            await axios.post('http://localhost:8080/api/notifications', message, {
+              headers: {
+                'Content-Type': 'text/plain'
+              }
+            });
+          }
+        }
+
+          // Handle event notifications
+    for (const event of eventsResponse.data) {
+        const eventMessage = `New event "${event.name}" has been created.`;
+        if (!existingMessages.includes(eventMessage)) {
+          await axios.post('http://localhost:8080/api/notifications', eventMessage, {
+            headers: {
+              'Content-Type': 'text/plain'
+            }
+          });
+        }
+      }
+
+     
+  
+
+        const filteredNotifications = existingNotifications.data
+          .filter(notification => 
+            !deletedNotificationIds.includes(notification.notificationId) &&
+            !notification.isRead
+          )
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        setNotifications(filteredNotifications);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setLoading(false);
+      }
+    };
+  
+    
+    
+    const handleBuildingDelete = async (buildingId, buildingName) => {
         try {
-            const response = await axios.get(`${BASE_URL}/user/${userId}`);
-            setNotifications(response.data);
+          // Delete the building
+          await axios.delete(`http://localhost:8080/api/buildings/${buildingId}`);
+          
+          // Create notification for building deletion
+          const deletionMessage = `Building "${buildingName}" has been deleted.`;
+          await axios.post('http://localhost:8080/api/notifications', deletionMessage, {
+            headers: {
+              'Content-Type': 'text/plain'
+            }
+          });
+      
+          // Refresh notifications list
+          const response = await axios.get('http://localhost:8080/api/notifications');
+          const filteredNotifications = response.data
+            .filter(notification => !deletedNotificationIds.includes(notification.notificationId) && !notification.isRead)
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+          
+          setNotifications(filteredNotifications);
+          
         } catch (error) {
-            console.error('Error fetching notifications:', error);
+          console.error('Error handling building deletion:', error);
         }
-    };
+      };
 
-    const fetchUnreadCount = async (userId) => {
-        try {
-            const response = await axios.get(`${BASE_URL}/user/${userId}/unread/count`);
-            setUnreadCount(response.data);
-        } catch (error) {
-            console.error('Error fetching unread count:', error);
+      
+
+    fetchBuildingsAndNotifications();
+  }, [deletedNotificationIds]);
+
+  const deleteAllNotifications = async () => {
+    try {
+      const deletionPromises = notifications.map(notification => 
+        axios.delete(`http://localhost:8080/api/notifications/${notification.notificationId}`)
+      );
+      
+      const results = await Promise.allSettled(deletionPromises);
+      const successfulDeletions = results
+        .filter(result => result.status === 'fulfilled')
+        .map((result, index) => notifications[index].notificationId);
+      
+      const updatedDeletedIds = [...deletedNotificationIds, ...successfulDeletions];
+      setDeletedNotificationIds(updatedDeletedIds);
+      localStorage.setItem('deletedNotificationIds', JSON.stringify(updatedDeletedIds));
+      
+      setNotifications([]);
+    } catch (error) {
+      console.error('Error deleting all notifications:', error);
+    }
+  };
+
+  const deleteNotification = async (notificationId) => {
+    try {
+      await axios.delete(`http://localhost:8080/api/notifications/${notificationId}`);
+      
+      const updatedDeletedIds = [...deletedNotificationIds, notificationId];
+      setDeletedNotificationIds(updatedDeletedIds);
+      localStorage.setItem('deletedNotificationIds', JSON.stringify(updatedDeletedIds));
+      
+      setNotifications(notifications.filter(n => n.notificationId !== notificationId));
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
+  
+
+  // Modify the markAsRead function
+const markAsRead = async (notificationId) => {
+    try {
+      await axios.put(`http://localhost:8080/api/notifications/${notificationId}/read`);
+      // Update the notification in the current state
+      setNotifications(notifications.filter(n => n.notificationId !== notificationId));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const handleBuildingDelete = async (buildingId, buildingName) => {
+    try {
+      // Delete the building
+      await axios.delete(`http://localhost:8080/api/buildings/${buildingId}`);
+      
+      // Create notification for building deletion
+      const deletionMessage = `Building "${buildingName}" has been deleted.`;
+      await axios.post('http://localhost:8080/api/notifications', deletionMessage, {
+        headers: {
+          'Content-Type': 'text/plain'
         }
-    };
+      });
+  
+      // Refresh notifications list
+      const response = await axios.get('http://localhost:8080/api/notifications');
+      const filteredNotifications = response.data
+        .filter(notification => !deletedNotificationIds.includes(notification.notificationId) && !notification.isRead)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      
+      setNotifications(filteredNotifications);
+      
+    } catch (error) {
+      console.error('Error handling building deletion:', error);
+    }
+  };
 
-    const markAsRead = async (notificationId) => {
-        try {
-            await axios.put(`${BASE_URL}/read/${notificationId}`);
-            fetchNotifications(user.id);
-            fetchUnreadCount(user.id);
-        } catch (error) {
-            console.error('Error marking notification as read:', error);
-        }
-    };
+  const handleNavigateToProfile = () => {
+    setDropdownOpen(false);
+    navigate("/userprofile");
+  };
 
-    const markAllAsRead = async () => {
-        try {
-            await axios.put(`${BASE_URL}/read/all/${user.id}`);
-            fetchNotifications(user.id);
-            fetchUnreadCount(user.id);
-        } catch (error) {
-            console.error('Error marking all notifications as read:', error);
-        }
-    };
+  const handleFeedback = () => {
+    navigate("/Feedback");
+  };
 
-    const deleteNotification = async (notificationId) => {
-        try {
-            await axios.delete(`${BASE_URL}/${notificationId}`);
-            fetchNotifications(user.id);
-            fetchUnreadCount(user.id);
-        } catch (error) {
-            console.error('Error deleting notification:', error);
-        }
-    };
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
 
-    // Profile Handlers
-    const handleNavigateToProfile = () => {
-        setDropdownOpen(false);
-        navigate("/userprofile");
-    };
+  if (loading) {
+    return <div className="notifications-loading">Loading notifications...</div>;
+  }
 
-    const handleToggleDevelopersMode = () => {
-        setDeveloperMode((prevDeveloperMode) => !prevDeveloperMode);
-    };
-
-    const handleFeedback = () => {
-        navigate("/Feedback");
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem("user");
-        navigate("/login");
-    };
-
-    // Effects
-    useEffect(() => {
-        const userData = JSON.parse(localStorage.getItem("user"));
-        if (!userData) {
-            navigate("/login");
-        } else {
-            setUser(userData);
-            fetchNotifications(userData.id);
-            fetchUnreadCount(userData.id);
-        }
-    }, [navigate]);
-
-    return (
-        <div>
-            {/* Header Component */}
-            <header style={{
-                position: "relative",
-                backgroundColor: "#7757FF",
-                color: "#FFFFFF",
-                padding: "20px 40px",
-                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                zIndex: 1000,
-            }}>
-                <div style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                }}>
-                    {/* Logo and Search */}
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                        <Link to="/homepage">
-                            <img
-                                src="/logoimg/Logodark.svg"
-                                alt="Logo"
-                                style={{ width: "240px", marginRight: "20px" }}
-                            />
-                        </Link>
-                        <form style={{ position: "relative" }} ref={searchRef}>
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                value={searchText}
-                                onChange={(e) => setSearchText(e.target.value)}
-                                style={{
-                                    width: "300px",
-                                    padding: "8px 12px 8px 40px",
-                                    borderRadius: "20px",
-                                    border: "none",
-                                    backgroundColor: "#FFFFFF",
-                                    color: "#7757FF",
-                                    fontSize: "16px",
-                                }}
-                            />
-                            <FaSearch
-                                style={{
-                                    position: "absolute",
-                                    top: "50%",
-                                    left: "12px",
-                                    transform: "translateY(-50%)",
-                                    color: "#7757FF",
-                                }}
-                            />
-                        </form>
-                    </div>
-
-                    {/* Navigation Links and User Profile */}
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                        <a href="/event" style={{
-                            color: "#FFFFFF",
-                            marginRight: "30px",
-                            textDecoration: "none",
-                            fontSize: "16px",
-                        }}>
-                            Calendar
-                        </a>
-                        <a href="#" style={{
-                            color: "#FFFFFF",
-                            marginRight: "30px",
-                            textDecoration: "none",
-                            fontSize: "16px",
-                        }}>
-                            Campus Service
-                        </a>
-                        <a href="#" style={{
-                            color: "#FFFFFF",
-                            marginRight: "30px",
-                            textDecoration: "none",
-                            fontSize: "16px",
-                        }}>
-                            Announcement
-                        </a>
-
-                        {/* Notifications */}
-                        <div style={{ marginRight: "20px", cursor: "pointer" }}>
-                            <a href="/notifications" style={{ color: "#FFFFFF" }}>
-                                <FaBell size={24} />
-                                {unreadCount > 0 && (
-                                    <span className="notification-badge">{unreadCount}</span>
-                                )}
-                            </a>
-                        </div>
-
-                        {/* User Profile Dropdown */}
-                        <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
-                            <img
-                                src="https://picsum.photos/200/300"
-                                alt="User Profile"
-                                style={{
-                                    width: "40px",
-                                    height: "40px",
-                                    borderRadius: "50%",
-                                    marginRight: "10px",
-                                    cursor: "pointer",
-                                }}
-                                onClick={() => {
-                                    setDropdownOpen(!dropdownOpen);
-                                }}
-                            />
-                            <span style={{ marginRight: "10px" }}>
-                                {user ? user.name : ""}
-                            </span>
-                            {dropdownOpen && (
-                                <div style={{
-                                    position: "absolute",
-                                    top: "60px",
-                                    right: "0",
-                                    backgroundColor: "#FFFFFF",
-                                    color: "#7757FF",
-                                    borderRadius: "8px",
-                                    boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-                                    overflow: "hidden",
-                                    zIndex: 1001,
-                                    minWidth: "200px",
-                                }}>
-                                    <div
-                                        onClick={handleToggleDevelopersMode}
-                                        style={{ padding: "10px 20px", cursor: "pointer" }}
-                                    >
-                                        {developerMode ? "Disable Developer Mode" : "Enable Developer Mode"}
-                                    </div>
-                                    <div
-                                        onClick={handleNavigateToProfile}
-                                        style={{ padding: "10px 20px", cursor: "pointer" }}
-                                    >
-                                        Profile
-                                    </div>
-                                    <div style={{ padding: "10px 20px", cursor: "pointer" }}>
-                                        Help
-                                    </div>
-                                    <div
-                                        onClick={handleFeedback}
-                                        style={{ padding: "10px 20px", cursor: "pointer" }}
-                                    >
-                                        Feedback
-                                    </div>
-                                    <div
-                                        onClick={handleLogout}
-                                        style={{ padding: "10px 20px", cursor: "pointer" }}
-                                    >
-                                        Logout
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            {/* Main Content */}
-            <div className="container mt-4">
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h2>Notifications ({unreadCount} unread)</h2>
-                    <button 
-                        className="btn btn-primary"
-                        onClick={markAllAsRead}
-                        style={{ backgroundColor: "#7757FF", border: "none" }}
-                    >
-                        Mark All as Read
-                    </button>
-                </div>
-                
-                <div className="notification-list">
-                    {notifications.map((notification) => (
-                        <div 
-                            key={notification.notificationID}
-                            className={`notification-item ${!notification.isRead ? 'unread' : ''}`}
-                        >
-                            <div className="notification-content">
-                                <p>{notification.message}</p>
-                                <small>{moment(notification.timestamp).fromNow()}</small>
-                            </div>
-                            <div className="notification-actions">
-                                {!notification.isRead && (
-                                    <button 
-                                        className="btn btn-sm btn-outline-primary me-2"
-                                        onClick={() => markAsRead(notification.notificationID)}
-                                    >
-                                        Mark as Read
-                                    </button>
-                                )}
-                                <button 
-                                    className="btn btn-sm btn-outline-danger"
-                                    onClick={() => deleteNotification(notification.notificationID)}
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                    {notifications.length === 0 && (
-                        <p className="text-center text-muted">No notifications</p>
-                    )}
-                </div>
-            </div>
+  return (
+    <div>
+    {/* Header Component */}
+    <header
+      style={{
+        position: "relative",
+        backgroundColor: "#7757FF",
+        color: "#FFFFFF",
+        padding: "20px 40px",
+        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+        zIndex: 1000,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        {/* Logo and Search */}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {/* Logo */}
+          <Link to="/homepage">
+            <img
+              src="/logoimg/Logodark.svg"
+              alt="Logo"
+              style={{ width: "240px", marginRight: "20px" }}
+            />
+          </Link>
+          {/* Search Form */}
+          <form style={{ position: "relative" }} ref={searchRef}>
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{
+                width: "300px",
+                padding: "8px 12px 8px 40px",
+                borderRadius: "20px",
+                border: "none",
+                backgroundColor: "#FFFFFF",
+                color: "#7757FF",
+                fontSize: "16px",
+              }}
+            />
+            <FaSearch
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "12px",
+                transform: "translateY(-50%)",
+                color: "#7757FF",
+              }}
+            />
+          </form>
         </div>
-    );
+        {/* Navigation Links and User Profile */}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {/* Navigation Links */}
+          <a
+            href="/detail"
+            style={{
+              color: "#FFFFFF",
+              marginRight: "30px",
+              textDecoration: "none",
+              fontSize: "16px",
+            }}
+          >
+            Building
+          </a>
+          <a
+            href="/event"
+            style={{
+              color: "#FFFFFF",
+              marginRight: "30px",
+              textDecoration: "none",
+              fontSize: "16px",
+            }}
+          >
+            Calendar
+          </a>
+          <a
+            href="/campusservice"
+            style={{
+              color: "#FFFFFF",
+              marginRight: "30px",
+              textDecoration: "none",
+              fontSize: "16px",
+            }}
+          >
+            Service
+          </a>
+          <a
+            href="/incidentreport"
+            style={{
+              color: "#FFFFFF",
+              marginRight: "30px",
+              textDecoration: "none",
+              fontSize: "16px",
+            }}
+          >
+            Incident Report
+          </a>
+          <a
+            href="/announcement"
+            style={{
+              color: "#FFFFFF",
+              marginRight: "30px",
+              textDecoration: "none",
+              fontSize: "16px",
+            }}
+          >
+            Announcement
+          </a>
+          {/* Notifications */}
+          <div style={{ marginRight: "20px", cursor: "pointer" }}>
+            <a href="/notifications" style={{ color: "#FFFFFF" }}>
+              <FaBell size={24} />
+            </a>
+          </div>
+          {/* User Profile Dropdown */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              position: "relative",
+            }}
+          >
+            <img
+              src="https://picsum.photos/200/300"
+              alt="User Profile"
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                marginRight: "10px",
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                setDropdownOpen(!dropdownOpen);
+              }}
+            />
+            <span style={{ marginRight: "10px" }}>
+              {user ? user.name : ""}
+            </span>
+            {dropdownOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "60px",
+                  right: "0",
+                  backgroundColor: "#FFFFFF",
+                  color: "#7757FF",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+                  overflow: "hidden",
+                  zIndex: 1001,
+                  minWidth: "200px",
+                }}
+              >
+                <div
+                  onClick={handleNavigateToProfile}
+                  style={{ padding: "10px 20px", cursor: "pointer" }}
+                >
+                  Profile
+                </div>
+                <div style={{ padding: "10px 20px", cursor: "pointer" }}>
+                  Help
+                </div>
+                <div
+                  onClick={handleFeedback}
+                  style={{ padding: "10px 20px", cursor: "pointer" }}
+                >
+                  Feedback
+                </div>
+                <div
+                  onClick={handleLogout}
+                  style={{ padding: "10px 20px", cursor: "pointer" }}
+                >
+                  Logout
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </header>
+
+      <div className="notifications-container">
+        <div className="notifications-header">
+          <h2>Notifications</h2>
+          {notifications.length > 0 && (
+            <button 
+              onClick={deleteAllNotifications}
+              className="delete-all-btn"
+              style={{
+                backgroundColor: "#ff4444",
+                color: "white",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: "4px",
+                cursor: "pointer",
+                marginLeft: "20px"
+              }}
+            >
+              Delete All
+            </button>
+          )}
+        </div>
+
+        <div className="notifications-list">
+          {notifications.length === 0 ? (
+            <div className="no-notifications">No notifications</div>
+          ) : (
+            notifications.map((notification) => (
+              <div
+                key={notification.notificationId}
+                className={`notification-item ${!notification.isRead ? 'unread' : ''}`}
+              >
+                <div className="notification-content">
+                  <p className="notification-message">{notification.message}</p>
+                  <span className="notification-time">
+                    {new Date(notification.timestamp).toLocaleString()}
+                  </span>
+                </div>
+                <div className="notification-actions">
+                  {!notification.isRead && (
+                    <button
+                      onClick={() => markAsRead(notification.notificationId)}
+                      className="mark-read-btn"
+                    >
+                      Mark as read
+                    </button>
+                  )}
+                  <button
+                    onClick={() => deleteNotification(notification.notificationId)}
+                    className="delete-btn"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
-export default Notification;
+export default Notifications;
