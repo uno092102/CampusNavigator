@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { Helmet } from "react-helmet";
 
 const AnnouncementApp = () => {
-  const [announcements, setAnnouncements] = useState([]);
   const [form, setForm] = useState({
     title: "",
     content: "",
     category: "General",
+    postedBy: "", // New input field for postedBy
   });
+
+  const API_BASE_URL = "http://localhost:8080/api/announcement";
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -17,28 +19,47 @@ const AnnouncementApp = () => {
     }));
   };
 
-  const handleAddAnnouncement = (e) => {
+  const handleAddAnnouncement = async (e) => {
     e.preventDefault();
-    if (!form.title || !form.content) {
+    if (!form.title || !form.content || !form.postedBy) {
       alert("Please fill all required fields!");
       return;
     }
-
-    const newAnnouncement = {
-      announcementID: announcements.length + 1,
-      title: form.title,
-      content: form.content,
-      category: form.category,
-      postTimestamp: new Date().toISOString(),
-    };
-
-    setAnnouncements((prevAnnouncements) => [...prevAnnouncements, newAnnouncement]);
-    setForm({ title: "", content: "", category: "General" });
+  
+    try {
+      const newAnnouncement = {
+        title: form.title,
+        content: form.content,
+        category: form.category,
+        postedBy: parseInt(form.postedBy, 10), // Convert to integer
+      };
+  
+      const response = await fetch(`${API_BASE_URL}/postAnnouncement`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json", // Ensure JSON format
+        },
+        body: JSON.stringify(newAnnouncement),
+      });
+  
+      if (!response.ok) {
+        const errorMessage = await response.text(); // Get server error
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorMessage}`);
+      }
+  
+      alert("Announcement added successfully!");
+      setForm({ title: "", content: "", category: "General", postedBy: "" });
+    } catch (error) {
+      console.error("Error adding announcement:", error.message);
+      alert(`Failed to add announcement: ${error.message}`);
+    }
   };
+  
+  
 
   return (
     <div style={styles.container}>
-        <Helmet>
+      <Helmet>
         <title>Announcement - Campus Navigator</title>
       </Helmet>
 
@@ -82,30 +103,21 @@ const AnnouncementApp = () => {
             <option value="Other">Other</option>
           </select>
         </div>
+        <div style={styles.formGroup}>
+          <label style={styles.label}>Posted By:</label>
+          <input
+            type="text"
+            name="postedBy"
+            value={form.postedBy}
+            onChange={handleInputChange}
+            style={styles.input}
+            required
+          />
+        </div>
         <button type="submit" style={styles.button}>
           Add Announcement
         </button>
       </form>
-
-      {/* Announcements List */}
-      <h2 style={styles.subHeader}>📋 Announcements</h2>
-      <div style={styles.cardContainer}>
-        {announcements.map((announcement) => (
-          <div key={announcement.announcementID} style={styles.card}>
-            <h3 style={styles.cardTitle}>{announcement.title}</h3>
-            <p style={styles.cardContent}>{announcement.content}</p>
-            <div style={styles.cardMeta}>
-              <p>
-                <strong>Category:</strong> {announcement.category}
-              </p>
-              <p>
-                <strong>Timestamp:</strong>{" "}
-                {new Date(announcement.postTimestamp).toLocaleString()}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };
@@ -123,10 +135,6 @@ const styles = {
   header: {
     textAlign: "center",
     color: "#333",
-  },
-  subHeader: {
-    marginTop: "20px",
-    color: "#444",
   },
   form: {
     backgroundColor: "#fff",
@@ -176,33 +184,6 @@ const styles = {
     fontWeight: "bold",
     cursor: "pointer",
     transition: "background-color 0.3s",
-  },
-  buttonHover: {
-    backgroundColor: "#0056b3",
-  },
-  cardContainer: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-    gap: "20px",
-  },
-  card: {
-    backgroundColor: "#fff",
-    padding: "15px",
-    borderRadius: "8px",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-  },
-  cardTitle: {
-    margin: "0 0 10px",
-    fontSize: "1.2em",
-    color: "#333",
-  },
-  cardContent: {
-    color: "#666",
-  },
-  cardMeta: {
-    marginTop: "10px",
-    fontSize: "0.9em",
-    color: "#555",
   },
 };
 
