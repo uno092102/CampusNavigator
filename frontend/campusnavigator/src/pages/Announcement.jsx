@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import { Helmet } from "react-helmet";
 import { Link, useNavigate } from "react-router-dom";
 import { FaSearch, FaBell } from "react-icons/fa";
@@ -15,16 +16,45 @@ const AnnouncementApp = () => {
   const navigate = useNavigate();
   const [searchResults, setSearchResults] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null); // Initialize as null
   const searchRef = useRef(null);
+
+  // User Authentication and Data Fetching
+  useEffect(() => {
+    const localUserData = JSON.parse(localStorage.getItem("user"));
+    if (!localUserData) {
+      navigate("/login");
+    } else {
+      // Fetch all users to get the current user's admin status
+      axios
+        .get("http://localhost:8080/api/user/getAllSearch")
+        .then((response) => {
+          const usersData = response.data;
+          // Find the current user in the list
+          const fullUserData = usersData.find(
+            (u) => u.userID === localUserData.userID
+          );
+          if (fullUserData) {
+            setUser(fullUserData);
+            console.log("Fetched full user data:", fullUserData);
+          } else {
+            console.error("User not found in getAllSearch");
+            setUser(localUserData); // Use local data if not found
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching user data:", error);
+          setUser(localUserData); // Use local data on error
+        });
+    }
+  }, [navigate]);
 
   // Header handler functions
   const handleSearchSubmit = (e) => {
     e.preventDefault();
   };
 
-  const handleResultClick = (item) => {
-  };
+  const handleResultClick = (item) => {};
 
   const handleNavigateToProfile = () => {
     // Close the dropdown and navigate to UserProfilePage
@@ -63,11 +93,14 @@ const AnnouncementApp = () => {
       category: form.category,
       postTimestamp: new Date().toISOString(),
     };
-    setAnnouncements((prevAnnouncements) => [...prevAnnouncements, newAnnouncement]);
+    setAnnouncements((prevAnnouncements) => [
+      ...prevAnnouncements,
+      newAnnouncement,
+    ]);
     setForm({
       title: "",
       content: "",
-      category: "General"
+      category: "General",
     });
   };
 
@@ -218,7 +251,7 @@ const AnnouncementApp = () => {
                 fontSize: "16px",
               }}
             >
-              Incident Report 
+              Incident Report
             </a>
             <a
               href="/announcement"
@@ -309,49 +342,54 @@ const AnnouncementApp = () => {
         <Helmet>
           <title>Announcement - Campus Navigator</title>
         </Helmet>
-        <h1 style={styles.header}>📢 Announcement Interface</h1>
 
-        <form onSubmit={handleAddAnnouncement} style={styles.form}>
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Title:</label>
-            <input
-              type="text"
-              name="title"
-              value={form.title}
-              onChange={handleInputChange}
-              style={styles.input}
-              required
-            />
-          </div>
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Content:</label>
-            <textarea
-              name="content"
-              value={form.content}
-              onChange={handleInputChange}
-              style={styles.textarea}
-              required
-            />
-          </div>
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Category:</label>
-            <select
-              name="category"
-              value={form.category}
-              onChange={handleInputChange}
-              style={styles.select}
-            >
-              <option value="General">General</option>
-              <option value="Event">Event</option>
-              <option value="Alert">Alert</option>
-              <option value="Maintenance">Maintenance</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          <button type="submit" style={styles.button}>
-            Add Announcement
-          </button>
-        </form>
+        {/* Conditionally render the form for admin users */}
+        {user && user.admin && (
+          <>
+            <h1 style={styles.header}>📢 Announcement Interface</h1>
+            <form onSubmit={handleAddAnnouncement} style={styles.form}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Title:</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={form.title}
+                  onChange={handleInputChange}
+                  style={styles.input}
+                  required
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Content:</label>
+                <textarea
+                  name="content"
+                  value={form.content}
+                  onChange={handleInputChange}
+                  style={styles.textarea}
+                  required
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Category:</label>
+                <select
+                  name="category"
+                  value={form.category}
+                  onChange={handleInputChange}
+                  style={styles.select}
+                >
+                  <option value="General">General</option>
+                  <option value="Event">Event</option>
+                  <option value="Alert">Alert</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <button type="submit" style={styles.button}>
+                Add Announcement
+              </button>
+            </form>
+          </>
+        )}
 
         <h2 style={styles.subHeader}>📋 Announcements</h2>
         <div style={styles.cardContainer}>

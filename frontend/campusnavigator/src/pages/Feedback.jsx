@@ -65,13 +65,11 @@ const FeedbackForm = () => {
         return response.json();
       })
       .then(() => {
-        alert("Feedback submitted successfully!");
         setMessage(""); // Clear form fields after successful submission
         setTimestamp("");
       })
       .catch((error) => {
         console.error("Error submitting feedback:", error);
-        alert("Failed to submit feedback. Please try again.");
       });
   };
 
@@ -264,7 +262,7 @@ const FeedbackForm = () => {
                 fontSize: "16px",
               }}
             >
-              Incident Report 
+              Incident Report
             </a>
             <a
               href="/announcement"
@@ -353,7 +351,12 @@ const FeedbackForm = () => {
       {/* Feedback Form */}
       <Container maxWidth="sm" style={{ marginTop: "20px" }}>
         <Paper className="feedback-form-container">
-          <Typography variant="h4" align="center" className="form-title" gutterBottom>
+          <Typography
+            variant="h4"
+            align="center"
+            className="form-title"
+            gutterBottom
+          >
             Submit Feedback
           </Typography>
           <form onSubmit={handleSubmit}>

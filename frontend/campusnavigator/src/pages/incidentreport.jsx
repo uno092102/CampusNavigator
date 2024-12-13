@@ -432,16 +432,10 @@ const IncidentReport = () => {
                     Profile
                   </div>
                   <div style={styles.dropdownItem}>Help</div>
-                  <div
-                    onClick={handleFeedback}
-                    style={styles.dropdownItem}
-                  >
+                  <div onClick={handleFeedback} style={styles.dropdownItem}>
                     Feedback
                   </div>
-                  <div
-                    onClick={handleLogout}
-                    style={styles.dropdownItem}
-                  >
+                  <div onClick={handleLogout} style={styles.dropdownItem}>
                     Logout
                   </div>
                 </div>
@@ -453,96 +447,107 @@ const IncidentReport = () => {
 
       {/* Main Content */}
       <div style={styles.container}>
-        <h1 style={styles.headerContent}>Incident Reports</h1>
-        <div style={styles.formContainer}>
-          <form
-            style={styles.form}
-            onSubmit={isEditing ? handleUpdate : handleCreate}
-          >
-            <div>
-              <label htmlFor="category">Category:</label>
-              <input
-                style={styles.input}
-                type="text"
-                name="category"
-                id="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                required
-              />
+        {/* Conditionally render the form only for admin users */}
+        {user && user.admin && (
+          <>
+            <h1 style={styles.headerContent}>Incident Reports</h1>
+            <div style={styles.formContainer}>
+              <form
+                style={styles.form}
+                onSubmit={isEditing ? handleUpdate : handleCreate}
+              >
+                <div>
+                  <label htmlFor="category">Category:</label>
+                  <input
+                    style={styles.input}
+                    type="text"
+                    name="category"
+                    id="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="description">Description:</label>
+                  <input
+                    style={styles.input}
+                    type="text"
+                    name="description"
+                    id="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="locationType">Location Type:</label>
+                  <input
+                    style={styles.input}
+                    type="text"
+                    name="locationType"
+                    id="locationType"
+                    value={formData.locationType}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="status">Status:</label>
+                  <input
+                    style={styles.input}
+                    type="text"
+                    name="status"
+                    id="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="timestamp">Timestamp:</label>
+                  <input
+                    style={styles.input}
+                    type="datetime-local"
+                    name="timestamp"
+                    id="timestamp"
+                    value={formData.timestamp}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                {isEditing ? (
+                  <div style={{ display: "flex" }}>
+                    <button style={styles.button} type="submit">
+                      Update
+                    </button>
+                    <button
+                      style={{ ...styles.button, ...styles.cancelButton }}
+                      type="button"
+                      onClick={() => {
+                        resetForm();
+                        setIsEditing(false);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button style={styles.button} type="submit">
+                    Create
+                  </button>
+                )}
+              </form>
             </div>
-            <div>
-              <label htmlFor="description">Description:</label>
-              <input
-                style={styles.input}
-                type="text"
-                name="description"
-                id="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="locationType">Location Type:</label>
-              <input
-                style={styles.input}
-                type="text"
-                name="locationType"
-                id="locationType"
-                value={formData.locationType}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="status">Status:</label>
-              <input
-                style={styles.input}
-                type="text"
-                name="status"
-                id="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="timestamp">Timestamp:</label>
-              <input
-                style={styles.input}
-                type="datetime-local"
-                name="timestamp"
-                id="timestamp"
-                value={formData.timestamp}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            {isEditing ? (
-              <div style={{ display: "flex" }}>
-                <button style={styles.button} type="submit">
-                  Update
-                </button>
-                <button
-                  style={{ ...styles.button, ...styles.cancelButton }}
-                  type="button"
-                  onClick={() => {
-                    resetForm();
-                    setIsEditing(false);
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button style={styles.button} type="submit">
-                Create
-              </button>
-            )}
-          </form>
-        </div>
-        <h2 style={{ color: "#fefefe", textShadow: "1px 1px 2px rgba(0, 0, 0, 0.3)" }}>
+          </>
+        )}
+
+        <h2
+          style={{
+            color: "#fefefe",
+            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.3)",
+          }}
+        >
           Existing Reports
         </h2>
         <table style={styles.table}>
@@ -553,7 +558,7 @@ const IncidentReport = () => {
               <th style={styles.th}>Location Type</th>
               <th style={styles.th}>Status</th>
               <th style={styles.th}>Timestamp</th>
-              <th style={styles.th}>Actions</th>
+              {user && user.admin && <th style={styles.th}>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -568,20 +573,22 @@ const IncidentReport = () => {
                     ? new Date(incident.timestamp).toLocaleString()
                     : "N/A"}
                 </td>
-                <td style={styles.td}>
-                  <button
-                    style={styles.button}
-                    onClick={() => handleEdit(incident)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    style={{ ...styles.button, ...styles.cancelButton }}
-                    onClick={() => handleDelete(incident.incidentID)}
-                  >
-                    Delete
-                  </button>
-                </td>
+                {user && user.admin && (
+                  <td style={styles.td}>
+                    <button
+                      style={styles.button}
+                      onClick={() => handleEdit(incident)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      style={{ ...styles.button, ...styles.cancelButton }}
+                      onClick={() => handleDelete(incident.incidentID)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
